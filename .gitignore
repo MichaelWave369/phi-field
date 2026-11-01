@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.DS_Store
+.netlify/
+dist/
+phi-field-netlify-release.zip

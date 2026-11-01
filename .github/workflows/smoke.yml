@@ -1,0 +1,27 @@
+name: Φ Field Static Smoke
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check-and-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate gateway
+        run: python -m unittest discover -s tests -v
+      - name: Assemble static release without unused artwork
+        run: python scripts/package_site.py
+      - name: Upload ready-to-review Netlify bundle (not a deployment)
+        uses: actions/upload-artifact@v4
+        with:
+          name: phi-field-netlify-release
+          path: phi-field-netlify-release.zip
+          if-no-files-found: error
+          retention-days: 14

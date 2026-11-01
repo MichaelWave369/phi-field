@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://phi-field.com/sitemap.xml
