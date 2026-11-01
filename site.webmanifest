@@ -1,1 +1,10 @@
-{"name":"Φ Field | Choose Your Destiny","short_name":"Φ Field","description":"A gateway to PhiOS Live, PhiOS XR, and PhiOS Mobile.","start_url":"/","scope":"/","display":"browser","background_color":"#060915","theme_color":"#080d1c"}
+{
+  "name": "Φ Field | Choose Your Destiny",
+  "short_name": "Φ Field",
+  "description": "A gateway to PhiOS Live, PhiOS XR, and PhiOS Mobile.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "browser",
+  "background_color": "#060915",
+  "theme_color": "#080d1c"
+}

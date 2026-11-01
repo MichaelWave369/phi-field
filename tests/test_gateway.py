@@ -53,3 +53,37 @@ class GatewaySmokeTests(unittest.TestCase):
 
 if __name__=='__main__': unittest.main()
 
+
+class PagesAndInteractions(unittest.TestCase):
+    """Deploy to either / (Netlify) or /phi-field/ (GitHub Pages) without recompiling."""
+    @classmethod
+    def setUpClass(cls):
+        cls.html = (ROOT / 'index.html').read_text(encoding='utf-8')
+        cls.js = (ROOT / 'assets/app.js').read_text(encoding='utf-8')
+        cls.css = (ROOT / 'assets/styles.css').read_text(encoding='utf-8')
+
+    def test_subpath_safe_home_and_manifest(self):
+        import json
+        self.assertRegex(self.html, r'class="brand" href="\./"')
+        manifest = json.loads((ROOT / 'site.webmanifest').read_text(encoding='utf-8'))
+        self.assertEqual(manifest['start_url'], './')
+        self.assertEqual(manifest['scope'], './')
+        self.assertNotIn('href="/"', self.html)
+
+    def test_progressive_enhancement_and_motion(self):
+        self.assertEqual(self.html.count('data-destination='), 3)
+        self.assertIn('event.preventDefault()', self.js)
+        self.assertIn('event.ctrlKey', self.js)
+        self.assertIn('prefers-reduced-motion: reduce', self.js)
+        self.assertIn('prefers-reduced-motion:reduce', self.css)
+        self.assertIn('transition.hidden = false', self.js)
+        self.assertIn('role="status"', self.html)
+
+    def test_hosting_isolation(self):
+        pages = (ROOT / '.github/workflows/pages.yml').read_text(encoding='utf-8')
+        smoke = (ROOT / '.github/workflows/smoke.yml').read_text(encoding='utf-8')
+        self.assertIn('actions/deploy-pages@v4', pages)
+        self.assertIn('branches: [main]', pages)
+        self.assertIn('path: ./dist', pages)
+        self.assertNotIn('netlify deploy', pages.lower())
+        self.assertNotIn('actions/deploy-pages', smoke)
