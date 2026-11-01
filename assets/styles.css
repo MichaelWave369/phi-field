@@ -14,3 +14,47 @@ html[data-motion="off"] .world__image,html[data-motion="off"] .world__aurora,htm
 @media(max-width:720px){.gateway{min-height:100svh}.world__image{background-image:url('../phi-field-mobile-full-world.webp');background-size:cover;background-position:center top;transform:none;animation:none}.world__veil{background:linear-gradient(180deg,rgba(4,6,20,.38) 0%,rgba(4,6,20,.1) 24%,rgba(4,7,18,.34) 41%,rgba(4,7,18,.8) 57%,#050916ed 100%)}.world__halo{top:7%;width:40vw;opacity:.28}.masthead{padding-top:19px}.brand{font-size:.95rem}.masthead__eyebrow{font-size:.53rem;letter-spacing:.12em;text-align:right}.main{padding-top:clamp(340px,45svh,740px);width:calc(100% - 32px)}.intro{margin-bottom:23px}.intro__eyebrow{font-size:.62rem;letter-spacing:.23em}.intro h1{font-size:clamp(2.5rem,9vw,4.2rem);letter-spacing:.075em}.intro__subhead{margin-top:11px;font-size:.76rem;letter-spacing:.1em}.intro__caption{font-size:.78rem;margin-top:6px}.destinies{grid-template-columns:1fr;gap:10px}.destiny{min-height:0;padding:13px 16px 12px;border-radius:13px;display:grid;grid-template-columns:50px 1fr;grid-template-rows:auto auto auto;column-gap:13px;align-items:center}.destiny__topline{grid-column:1/-1;font-size:.58rem;margin-bottom:4px}.destiny__icon{grid-row:2/4;grid-column:1;width:48px;height:48px;margin:0}.destiny__title{grid-row:2;grid-column:2;font-size:1.16rem}.destiny__desc{grid-row:3;grid-column:2;font-size:.76rem;line-height:1.35;margin:3px 0 0}.destiny__cta{grid-row:4;grid-column:2;margin-top:9px;font-size:.65rem}.boundary{font-size:.67rem;margin:16px 9px 0}.footer{padding:20px 0;flex-wrap:wrap;justify-content:center;text-align:center;gap:12px;letter-spacing:.065em}.footer__right{gap:12px;justify-content:center;flex-wrap:wrap}}
 @media(max-width:360px){.brand{letter-spacing:.1em}.masthead__eyebrow{font-size:.47rem}.intro h1{font-size:2.38rem}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.world__image,.world__aurora,.world__haze,.world__star{animation:none!important}.world__halo{display:none}.destiny{transition:none!important}.destiny:hover,.destiny:focus-visible{transform:none!important}}
+
+/* Rung 2: selected-world response, cinematic handoff, and keyboard guidance. */
+.gateway{--portal-accent:#72dfff}
+.gateway[data-portal="live"]{--portal-accent:#77c9ff}
+.gateway[data-portal="xr"]{--portal-accent:#c6a0ff}
+.gateway[data-portal="mobile"]{--portal-accent:#6afadd}
+.world__reactive{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .45s ease;background:radial-gradient(ellipse 37% 26% at 50% 56%,color-mix(in srgb,var(--portal-accent) 30%,transparent),transparent 88%),linear-gradient(180deg,transparent 52%,color-mix(in srgb,var(--portal-accent) 8%,transparent))}
+.gateway[data-portal="live"] .world__reactive,.gateway[data-portal="xr"] .world__reactive,.gateway[data-portal="mobile"] .world__reactive{opacity:1}
+.world__signal{position:absolute;width:5px;height:5px;pointer-events:none;border-radius:50%;background:#d8fbff;box-shadow:0 0 10px 4px #89eaff8c;opacity:0;animation:signal-drift 13s ease-in-out infinite}
+.world__signal--one{left:21%;top:44%;animation-delay:-2s}.world__signal--two{left:72%;top:36%;animation-delay:-6s}.world__signal--three{left:49%;top:58%;animation-delay:-10s}
+.intro__selection{display:flex;align-items:center;justify-content:center;gap:9px;margin:15px 0 0;font-weight:800;font-size:.66rem;letter-spacing:.24em;color:#d6faff;text-shadow:0 2px 14px #000;min-height:15px}
+.intro__selection-dot{width:6px;height:6px;border-radius:50%;background:var(--portal-accent);box-shadow:0 0 12px 3px color-mix(in srgb,var(--portal-accent) 60%,transparent);transition:background .2s}
+.destiny{overflow:hidden;isolation:isolate}.destiny:after{content:"";position:absolute;inset:0 100% 0 -110%;background:linear-gradient(112deg,transparent 30%,color-mix(in srgb,var(--accent) 12%,transparent) 50%,transparent 70%);opacity:0;pointer-events:none;transform:skewX(-8deg);transition:opacity .25s}
+.destiny:hover:after,.destiny:focus-visible:after{inset:0 -110% 0 0;opacity:1;animation:card-sheen .7s ease-out both}
+.destiny__signal{display:block;align-self:start;margin-top:2px;margin-bottom:13px;color:color-mix(in srgb,var(--accent) 75%,white);font-size:.61rem;letter-spacing:.12em;font-weight:800}
+.destiny:hover .destiny__icon,.destiny:focus-visible .destiny__icon{box-shadow:0 0 35px color-mix(in srgb,var(--glow) 52%,transparent);transform:scale(1.06)}
+.destiny__icon{transition:transform .2s ease,box-shadow .2s ease}
+.nav-hint{margin:14px auto 0;max-width:850px;text-align:center;color:#d7e8ff;font-size:.65rem;letter-spacing:.1em;font-weight:700;text-shadow:0 1px 8px #000}
+.portal-transition[hidden]{display:none!important}
+.portal-transition{position:fixed;z-index:999;inset:0;background:radial-gradient(circle at 50% 45%,color-mix(in srgb,var(--portal-accent) 23%,transparent),transparent 44%),#060c1bf5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .28s ease;color:#f5faff}
+.portal-transition[data-destination="live"]{--portal-accent:#77c9ff}.portal-transition[data-destination="xr"]{--portal-accent:#c6a0ff}.portal-transition[data-destination="mobile"]{--portal-accent:#6afadd}
+.portal-transition.is-active{opacity:1;pointer-events:auto}
+.portal-transition__ring{width:125px;height:125px;display:grid;place-items:center;border:1px solid var(--portal-accent);border-radius:50%;font:normal 5rem/1 Georgia,serif;color:var(--portal-accent);box-shadow:0 0 45px color-mix(in srgb,var(--portal-accent) 40%,transparent),inset 0 0 45px color-mix(in srgb,var(--portal-accent) 18%,transparent);animation:gate-pulse .7s ease-in-out infinite alternate}
+.portal-transition__eyebrow{font-size:.75rem;font-weight:850;letter-spacing:.28em;color:var(--portal-accent)}
+.portal-transition__name{font-size:clamp(2rem,5vw,3.2rem);letter-spacing:.08em}
+.portal-transition__note{font-size:.83rem;color:#dae6f4}
+@keyframes signal-drift{0%,100%{opacity:0;transform:translateY(24px)}35%,65%{opacity:.7}85%{transform:translateY(-32px)}}
+@keyframes card-sheen{from{transform:translateX(-100%) skewX(-8deg)}to{transform:translateX(200%) skewX(-8deg)}}
+@keyframes gate-pulse{to{transform:scale(1.12);box-shadow:0 0 80px color-mix(in srgb,var(--portal-accent) 65%,transparent)}}
+html[data-motion="off"] .world__signal{animation:none!important;opacity:0}
+html[data-motion="off"] .world__reactive{transition:none!important}
+html[data-motion="off"] .destiny:after{animation:none!important;display:none}
+html[data-motion="off"] .destiny__icon{transition:none!important}
+html[data-motion="off"] .destiny:hover .destiny__icon,html[data-motion="off"] .destiny:focus-visible .destiny__icon{transform:none}
+html[data-motion="off"] .portal-transition{transition:none!important}
+@media(max-width:720px){.intro__selection{font-size:.57rem;margin-top:11px}.destiny__signal{grid-row:4;grid-column:2;margin-top:5px;margin-bottom:4px;font-size:.55rem}.destiny__cta{grid-row:5;grid-column:2;margin-top:6px}.nav-hint{font-size:.58rem;margin:12px auto 0}.world__signal{display:none}}
+@media(max-width:420px){.intro__selection{letter-spacing:.1em}.nav-hint{letter-spacing:0}}
+@media(prefers-reduced-motion:reduce){.world__signal,.destiny:after{animation:none!important;display:none!important}.world__reactive,.destiny__icon,.portal-transition{transition:none!important}.portal-transition__ring{animation:none!important}}
+
+.motion-toggle:disabled{opacity:.72;cursor:not-allowed}
+
+.preview-ribbon{display:none;position:absolute;right:0;top:62px;font-size:.6rem;letter-spacing:.12em;border:1px solid #8bc8ff66;border-radius:999px;background:#041327b3;padding:7px 10px;color:#caf3ff;text-shadow:0 2px 8px #000;font-weight:800}
+html[data-preview="true"] .preview-ribbon{display:inline-flex}
+@media(max-width:720px){.preview-ribbon{top:53px;font-size:.5rem;padding:5px 7px}}

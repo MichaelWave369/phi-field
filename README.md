@@ -1,31 +1,66 @@
-# Φ Field gateway artwork, v1
+# Φ FIELD · Choose Your Destiny
 
-Assets for **phi-field.com** · Source visual theme: neon cyberpunk + post-apocalyptic tech + high fantasy.
+Official web gateway for [phi-field.com](https://phi-field.com). One field, three paths.
 
-## Image files
-- `phi-field-desktop-master.png`: clean, text-free desktop master at native generation resolution (1672 × 941). No interactive elements or titles are embedded.
-- `phi-field-desktop.webp`: production primary desktop background (1672 × 941).
-- `phi-field-desktop-ui-ready.webp`: same primary scene with subtle darkening for readable live text and cards.
-- `phi-field-desktop-alternate.webp`: a second clean cinematic composition.
-- `phi-field-mobile-portal-focus.webp`: 1080 × 1920 center crop for narrow phones; emphasizes the Phi gateway but cuts off the side characters and castle.
-- `phi-field-mobile-full-world.webp`: 1080 × 1920 mobile adaptation preserving the entire original world as a central panorama, surrounded by softened ambience, with lower dark space for stacked UI cards.
-- `phi-field-art-direction.webp`: concept sheet; visual reference ONLY, not a production background (contains illustrative UI/text).
+**GitHub Pages proving ground:** [michaelwave369.github.io/phi-field/](https://michaelwave369.github.io/phi-field/) once Pages is enabled in GitHub Settings. See [PAGES_PREVIEW.md](PAGES_PREVIEW.md) for instructions. Pull requests do not deploy anything; merging to main publishes GitHub Pages only, never Netlify.
 
-## Living overlay assets
-- `phi-field-animated-halo.svg`: transparent vector orbital glyph overlay with CSS animation (does not include the central Phi, which is already painted into the background).
-- `PhiFieldLivingOverlay.jsx` and `phi-field-living-overlay.css`: optional decorative, pointer-events:none React ambient effect. Animated aurora, mist, glyph orbital lines, and particles. Respects `prefers-reduced-motion`.
+## Destinations
 
-## Integration
-1. Copy production `.webp` and `.svg` files into a React/Vite app's `public/assets/` directory.
-2. Copy `.jsx` and `.css` into `src/components/` and update the CSS `background-image` paths if needed.
-3. Give the hero `className="phi-hero"`; render `<PhiFieldLivingOverlay />` as a first child; place real heading, interactive `<a>` destination cards and footer after the effect layer.
-4. Keep live links and button labels in React, NEVER as pixels. Preserve your current real destinations for PhiOS Live, XR, and Mobile.
-5. On mobile, stack three CTA cards vertically; place them in the dark lower half so the hero art stays legible.
-6. For accessibility, keep the effects decorative, retain text contrast, and provide reduced-motion support.
+| Choice | Current web experience | Notes |
+| --- | --- | --- |
+| PhiOS Live | https://michaelwave369.github.io/PhiOS/ | Public browser showcase, not a Linux OS install |
+| PhiOS XR | https://michaelwave369.github.io/PhiOS-XR/ | Browser 3D and optional compatible headset WebXR |
+| PhiOS Mobile | https://michaelwave369.github.io/PhiOS-Mobile/ | Touch-first browser/PWA preview, not a replacement Android ROM |
 
-The base image has a dragon, aircraft, and waterfalls **painted into it**. The bundled overlay makes ambience move but does not animate those objects independently. True dragon flight, moving craft or waterfall flow need dedicated separate sprites/videos or artist-created scene layers, not just a background still.
+These are real `<a>` links. No account, tracker, JavaScript framework, network API, cookies, or privileged OS integration is required. Ambient motion is cosmetic only and can be disabled; `prefers-reduced-motion` is honored. Rung 2 adds reactive portal effects, optional short desktop transitions, and arrow-key selection; headset/touch and reduced-motion links navigate natively.
 
-## Suggested palette
-- Night navy `#070B1A`, cyan `#46DFFF`, magenta `#D04EED`, violet `#8B5CF6`, mint `#57FFD4`, pale text `#E7F2FF`.
+## Cost-conscious workflow
 
-Note: These are original AI-generated fantasy/scifi images referencing broad genres, not copies of in-game Fallout / Dragon Age art. Keep the site MIT/open-source text separate from generated image license claims; check your project distribution policy.
+**Production stays untouched while developing.** This repository is the source of truth. Preview and test locally or with GitHub Actions first. Connect Netlify's Git-based continuous deployment **only when the release is approved**, because enabling it may trigger builds on future pushes and PRs. To limit deploy/credit usage, consider keeping production publishing manual, or configure Netlify builds only on a deliberate `release` branch and commit only after review.
+
+For a single no-build upload to the existing Netlify site, **download the GitHub Actions release artifact, unzip twice if needed, and upload the contents of the resulting site bundle** (where `index.html` lives), not the full GitHub repository. With Netlify CLI, `netlify deploy --prod --dir .` publishes the static contents, but is not necessary if using dashboard drag-and-drop.
+
+## Run locally
+
+```sh
+python -m http.server 4173 --directory .
+```
+
+Open `http://localhost:4173`. Run checks without installing dependencies:
+
+```sh
+python -m unittest discover -s tests -v
+```
+
+## GitHub Actions deploy-ready bundle
+
+`.github/workflows/smoke.yml` tests the repository on PRs and `main`, then packages only the required site files into `phi-field-netlify-release.zip` using `scripts/package_site.py`. The ZIP is a **GitHub Actions artifact**. No Netlify deployment is triggered by these tests. Keep any Netlify automatic publishing disabled until explicitly approved.
+
+## Architecture and asset notes
+
+- `index.html`: semantic, keyboard-accessible gateway and native destination links.
+- `assets/styles.css`: fluid desktop + mobile layouts, accessible motion rules.
+- `assets/app.js`: optional local-only ambient-motion preference.
+- `phi-field-desktop-ui-ready.webp`: optimized cinematic desktop world from supplied pack.
+- `phi-field-mobile-full-world.webp`: mobile composition from supplied pack.
+- `phi-field-animated-halo.svg`: decorative original glyph from supplied pack.
+- `netlify.toml`: static publish settings and strict security headers, applied only when Netlify processes the deployment.
+
+Artwork source: `phi-field-gateway-assets.zip`, supplied by project owner. The images are separate from the MIT license for code; see `ARTWORK.md`. Images contain static dragon, waterfall, and aircraft. Cosmetic CSS layers do not independently animate those objects.
+
+## Release checklist
+
+- [ ] Tests pass on `main` and external destinations still resolve.
+- [ ] Desktop and 390px mobile browser render reviewed.
+- [ ] Keyboard navigation / reduced-motion reviewed.
+- [ ] Netlify project uses the correct production branch or one reviewed manual deploy.
+- [ ] No secrets or unreviewed pull requests are automatically published.
+- [ ] After deployment, verify `https://phi-field.com`, certificate, redirect, and all three cards.
+
+**Do not connect this repository to an auto-publishing Netlify site before review.**
+
+## Repository asset layout
+
+Original source artwork and optional React living-overlay assets are maintained at the repository root. The static gateway deliberately references those original files to avoid duplicating binary artwork in Git history. Browser code lives under `assets/`, with `index.html` as the site entry point.
+
+**Deployment policy:** Netlify production stays manually controlled. Do not connect a development branch to production or enable automatic publishing until ready; deploy only the reviewed release branch.
