@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Animated energy halo">
+<defs><radialGradient id="glow"><stop offset="0" stop-color="#47eeff" stop-opacity="0"/><stop offset="0.8" stop-color="#32c8ff" stop-opacity=".13"/><stop offset="1" stop-color="#bd4dff" stop-opacity="0"/></radialGradient><filter id="blur"><feGaussianBlur stdDeviation="12"/></filter></defs>
+<style>
+@keyframes turn{to{transform:rotate(360deg)}}@keyframes back{to{transform:rotate(-360deg)}}@keyframes pulse{50%{opacity:.35;transform:scale(1.07)}}
+.orbit{transform-origin:512px 512px;animation:turn 36s linear infinite}.orbit2{transform-origin:512px 512px;animation:back 57s linear infinite}.glow{transform-origin:512px 512px;animation:pulse 6s ease-in-out infinite}@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+<circle class="glow" cx="512" cy="512" r="430" fill="url(#glow)"/>
+<g class="orbit" fill="none" stroke="#57deff" stroke-opacity=".65" stroke-width="2"><circle cx="512" cy="512" r="350" stroke-dasharray="6 24"/><ellipse cx="512" cy="512" rx="360" ry="195" transform="rotate(45 512 512)"/><ellipse cx="512" cy="512" rx="360" ry="195" transform="rotate(-45 512 512)"/></g>
+<g class="orbit2" fill="none" stroke="#b25cff" stroke-opacity=".45" stroke-width="3"><circle cx="512" cy="512" r="405" stroke-dasharray="1 24"/><path d="M512 101 L923 512 L512 923 L101 512Z"/></g>
+</svg>

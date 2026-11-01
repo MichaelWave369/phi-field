@@ -1,0 +1,27 @@
+/* Layer is subtle, accessible, and click-through; no fake buttons in artwork. */
+.phi-hero {position:relative; isolation:isolate; background-color:#060b1a;
+  background-image:url('/assets/phi-field-desktop.webp');
+  background-position:center center; background-size:cover; overflow:hidden;}
+.phi-hero > :not(.phi-living) { position:relative; z-index:2; }
+.phi-living {position:absolute; z-index:1; inset:0; overflow:hidden;
+  pointer-events:none; user-select:none; contain:layout paint; }
+.phi-living__aurora {position:absolute; inset:-18%;
+  background:radial-gradient(ellipse at 50% 10%,rgba(92,27,207,.25),transparent 43%),
+  radial-gradient(ellipse at 34% 24%,rgba(31,225,246,.13),transparent 38%);
+  animation:phi-aurora 18s ease-in-out infinite alternate;mix-blend-mode:screen;}
+.phi-living__haze {position:absolute;inset:42% -20% -30%;
+  background:radial-gradient(ellipse at 50% 70%,rgba(52,214,253,.16),transparent 62%);
+  filter:blur(20px);animation:phi-haze 20s ease-in-out infinite alternate;}
+.phi-living__halo {position:absolute; width:min(22vw,320px); aspect-ratio:1;
+  left:50%;top:14%;transform:translate(-50%,-50%);
+  background:url('/assets/phi-field-animated-halo.svg') center/contain no-repeat;
+  opacity:.45;mix-blend-mode:screen;}
+.phi-living__spark {position:absolute;width:3px;height:3px;border-radius:50%;
+  background:#a7f7ff;box-shadow:0 0 9px 3px #4dd4f677;
+  opacity:0;animation:phi-spark 9s ease-in-out infinite;}
+@keyframes phi-aurora{to{transform:translate3d(2%,-1%,0) scale(1.06);filter:hue-rotate(12deg)}}
+@keyframes phi-haze{to{transform:translate3d(-3%,-5%,0) scale(1.1)}}
+@keyframes phi-spark{0%,100%{opacity:0;transform:translateY(8px)}30%,65%{opacity:.8}80%{transform:translateY(-28px)}}
+@media(max-width:720px){.phi-hero{background-image:url('/assets/phi-field-mobile-full-world.webp');background-position:center top;}
+.phi-living__halo{width:40vw;top:29%;opacity:.30}}
+@media(prefers-reduced-motion:reduce){.phi-living *, .phi-living__aurora, .phi-living__haze{animation:none!important}}
