@@ -62,9 +62,14 @@ Reset clears only the Companion profile, not other applications or PhiOS setting
   This gateway provides a navigation entry, not a privileged adapter.
 - PhiOperator retains its independent Passport format and learning progress.
   Field Companion neither reads nor overwrites it.
-- PhiOS Live, XR, and Mobile do not yet implement Field Companion import.
-  End-to-end inter-app continuation will require separately reviewed receivers.
+- PhiOS Live, XR, and Mobile now have reviewed manual Field Companion v1
+  receivers on their public browser previews. Cross-origin automatic sync is
+  still intentionally absent.
 - No automatic account linking, hidden cross-origin messages, cloud sync,
   external telemetry, or Netlify deploy is introduced.
 
 See tests/test_gateway.py and tests/browser_smoke.py for contract and Chromium checks.
+
+## Production promotion
+
+See [ONE_UPLOAD_PRODUCTION.md](ONE_UPLOAD_PRODUCTION.md) for the one-upload manual Netlify release procedure. Development remains on GitHub Pages.

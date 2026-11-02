@@ -160,3 +160,31 @@ class Rung4FieldCompanionTests(unittest.TestCase):
         self.assertIn('body.field-companion-open', self.css)
         self.assertIn('body.field-companion-open .skip-link', self.css)
         self.assertIn('prefers-reduced-motion:reduce', self.css)
+
+
+class ProductionPromotionContractTests(unittest.TestCase):
+    def test_drop_security_headers_are_in_publish_root(self):
+        headers = (ROOT / '_headers').read_text(encoding='utf-8')
+        for required in ('/*\n', 'X-Content-Type-Options: nosniff',
+                         'X-Frame-Options: DENY',
+                         "Content-Security-Policy: default-src 'self'",
+                         "connect-src 'none'", "script-src 'self'",
+                         'Cache-Control: public, max-age=3600'):
+            self.assertIn(required, headers)
+
+    def test_release_includes_receipt_and_stable_zip(self):
+        script = (ROOT / 'scripts/package_site.py').read_text(encoding='utf-8')
+        for required in ("'_headers'", "'release.json'",
+                         "['git', 'rev-parse', 'HEAD']", "ZipInfo(",
+                         "hashlib.sha256("):
+            self.assertIn(required, script)
+
+    def test_no_netlify_automatic_deploy_or_build(self):
+        config = (ROOT / 'netlify.toml').read_text(encoding='utf-8')
+        self.assertIn('publish = "."', config)
+        self.assertNotIn('command =', config)
+        for name in ('smoke.yml', 'pages.yml', 'browser-smoke.yml'):
+            workflow = (ROOT / '.github/workflows' / name).read_text(encoding='utf-8')
+            self.assertNotIn('NETLIFY_AUTH_TOKEN', workflow)
+            self.assertNotIn('NETLIFY_SITE_ID', workflow)
+            self.assertNotIn('netlify deploy --prod', workflow)
