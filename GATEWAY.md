@@ -15,3 +15,13 @@ Netlify remains entirely separate. When the public GitHub Pages preview has been
 ## What works
 
 The desktop, XR and Mobile anchors open the existing web-preview destinations. The visual handoff is decorative and disabled for reduced motion, touch and XR devices. The code is dependency-free and requires neither an account nor a backend. These links do not install or replace operating systems.
+
+
+## Rung 3: Living World + desktop/mobile/browser checks
+- Decorative pointer parallax, portal-color beams and layered rings; zero network telemetry.
+- Native links work without JS; reduced-motion, touch/headset and data-saver sessions avoid expensive effects.
+- Optional desktop standard gamepad D-pad/left stick for selection and A for launch; WebXR controllers are **not** commandeered.
+- Desktop cinematic handoff has Escape/Cancel. Quest/touch navigation remains immediate.
+- PRs run source checks plus a headless Chromium smoke workflow that tests both root and /phi-field/ hosting, responsive viewports, asset loading, reduced motion, selection and a mocked outbound launch. Screenshots are available as GitHub Actions artifacts.
+- Green browser emulation is **not** physical Quest 3 certification. Check with actual Quest Browser before declaring headset quality.
+- No automatic Netlify deploy. The existing production hostname remains unchanged.

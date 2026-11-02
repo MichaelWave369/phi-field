@@ -20,6 +20,7 @@
   <link rel="preload" as="image" href="phi-field-mobile-full-world.webp" media="(max-width: 720px)" fetchpriority="high">
   <link rel="stylesheet" href="assets/styles.css">
   <script src="assets/app.js" defer></script>
+  <script src="assets/world.js" defer></script>
   <title>Φ FIELD | Choose Your Destiny</title>
 </head>
 <body>
@@ -32,6 +33,9 @@
       <div class="world__haze"></div>
       <div class="world__halo"></div>
       <div class="world__reactive"></div>
+      <div class="world__gate-beam"></div>
+      <div class="world__gate-rings"></div>
+      <div class="world__cursor-glow"></div>
       <div class="world__signal world__signal--one"></div>
       <div class="world__signal world__signal--two"></div>
       <div class="world__signal world__signal--three"></div>
@@ -83,7 +87,7 @@
           <span class="destiny__cta">OPEN MOBILE <span aria-hidden="true">→</span></span>
         </a>
       </nav>
-      <p class="nav-hint">TAB to navigate <span aria-hidden="true">·</span> arrow keys to select <span aria-hidden="true">·</span> ENTER to launch</p>
+      <p class="nav-hint" data-control-hint>TAB to navigate <span aria-hidden="true">·</span> arrow keys to select <span aria-hidden="true">·</span> ENTER to launch</p>
       <p class="boundary">These launch working web previews, not replacement operating systems. XR features require a compatible browser or headset.</p>
     </main>
 
@@ -92,6 +96,7 @@
       <span class="portal-transition__eyebrow">ENTERING THE FIELD</span>
       <strong class="portal-transition__name">PhiOS</strong>
       <span class="portal-transition__note">Opening the selected web experience…</span>
+      <button type="button" class="portal-transition__cancel">CANCEL LAUNCH</button>
     </div>
 
     <footer class="footer">

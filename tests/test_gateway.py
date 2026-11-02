@@ -87,3 +87,42 @@ class PagesAndInteractions(unittest.TestCase):
         self.assertIn('path: ./dist', pages)
         self.assertNotIn('netlify deploy', pages.lower())
         self.assertNotIn('actions/deploy-pages', smoke)
+
+
+class Rung3LivingWorldTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.html = (ROOT / 'index.html').read_text(encoding='utf-8')
+        cls.css = (ROOT / 'assets/styles.css').read_text(encoding='utf-8')
+        cls.script = (ROOT / 'assets/world.js').read_text(encoding='utf-8')
+        cls.app = (ROOT / 'assets/app.js').read_text(encoding='utf-8')
+
+    def test_scene_is_decorative_and_progressive(self):
+        for name in ('world__gate-beam', 'world__gate-rings', 'world__cursor-glow'):
+            self.assertIn('class="' + name + '"', self.html)
+            self.assertIn('.' + name, self.css)
+        self.assertIn('src="assets/world.js" defer', self.html)
+        self.assertIn("event.pointerType === 'touch'", self.script)
+
+    def test_motion_and_low_power(self):
+        self.assertIn('prefers-reduced-motion: reduce', self.script)
+        self.assertIn("navigator.connection && navigator.connection.saveData", self.script)
+        self.assertIn('data-quality="lite"', self.css)
+        self.assertIn("html.dataset.motion === 'off'", self.script)
+
+    def test_cancelable_transition(self):
+        self.assertIn('class="portal-transition__cancel"', self.html)
+        self.assertIn("?.addEventListener('click'", self.app)
+        self.assertIn('cancelTransition()', self.app)
+
+    def test_controller_without_xr_takeover(self):
+        self.assertIn('navigator.xr) return', self.script)
+        self.assertIn("gamepadconnected", self.script)
+        self.assertIn('lastDirection = true; lastConfirm = true', self.script)
+        self.assertIn("cards[index].click()", self.script)
+
+    def test_browser_ci_and_no_netlify_deploy(self):
+        workflow = (ROOT / '.github/workflows/browser-smoke.yml').read_text(encoding='utf-8')
+        self.assertIn('python tests/browser_smoke.py', workflow)
+        self.assertIn('pull_request:', workflow)
+        self.assertNotIn('netlify deploy', workflow.lower())
