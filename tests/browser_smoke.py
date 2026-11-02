@@ -33,6 +33,12 @@ def check_page(browser, url, label, width, height, reduced=False, mobile=False):
     assert response and response.status == 200, f"{label}: root did not load"
     assert page.title() == "Φ FIELD | Choose Your Destiny"
     assert page.locator("a.destiny[data-destination]").count() == 3
+    receipt = page.request.get(url + 'release.json')
+    assert receipt.status == 200, f'{label}: release.json not served'
+    receipt_json = receipt.json()
+    assert receipt_json['project'] == 'MichaelWave369/phi-field'
+    assert receipt_json['format_version'] == 1
+    assert len(receipt_json['source_commit']) == 40, f'{label}: source revision missing'
     assert page.locator(".world__image").evaluate("(node) => getComputedStyle(node).backgroundImage.includes('phi-field-desktop-ui-ready.webp') || getComputedStyle(node).backgroundImage.includes('phi-field-mobile-full-world.webp')")
     assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"), f"{label}: horizontal overflow"
     assert not errors and not broken, f"{label}: errors={errors} 404s={broken}"
