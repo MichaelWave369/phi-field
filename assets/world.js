@@ -18,7 +18,7 @@
   const updateHint = (controller = false) => {
     if (!hint) return;
     if (controller) hint.textContent = 'CONTROLLER: D-PAD TO SELECT · A TO ENTER';
-    else if (coarse.matches) hint.textContent = 'TAP A PORTAL TO ENTER · LINKS OPEN DIRECTLY';
+    else if (coarse.matches || window.innerWidth <= 720) hint.textContent = 'TAP A PORTAL TO ENTER · LINKS OPEN DIRECTLY';
     else hint.textContent = 'TAB OR ARROWS TO SELECT · ENTER TO LAUNCH · ESC TO CANCEL';
   };
   updateHint();
