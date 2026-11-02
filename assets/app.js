@@ -82,6 +82,11 @@
   };
   document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && navigating) cancelTransition(); });
   window.addEventListener('pageshow', cancelTransition);
+  document.querySelector('.portal-transition__cancel')?.addEventListener('click', () => {
+    cancelTransition();
+    const selected = cards.find(card => card.dataset.destination === root?.dataset.portal);
+    selected?.focus();
+  });
 
   cards.forEach(card => card.addEventListener('click', event => {
     if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -102,6 +107,6 @@
     transition.hidden = false;
     document.body.classList.add('is-transiting');
     requestAnimationFrame(() => transition.classList.add('is-active'));
-    navigationTimer = window.setTimeout(() => window.location.assign(url), 620);
+    navigationTimer = window.setTimeout(() => window.location.assign(url), 760);
   }));
 })();

@@ -58,3 +58,34 @@ html[data-motion="off"] .portal-transition{transition:none!important}
 .preview-ribbon{display:none;position:absolute;right:0;top:62px;font-size:.6rem;letter-spacing:.12em;border:1px solid #8bc8ff66;border-radius:999px;background:#041327b3;padding:7px 10px;color:#caf3ff;text-shadow:0 2px 8px #000;font-weight:800}
 html[data-preview="true"] .preview-ribbon{display:inline-flex}
 @media(max-width:720px){.preview-ribbon{top:53px;font-size:.5rem;padding:5px 7px}}
+
+
+/* Rung 3: low-cost scene response. Layers are decorative and never receive input. */
+.gateway{--field-shift-x:0px;--field-shift-y:0px;--field-pointer-x:50%;--field-pointer-y:54%}
+.world__gate-beam{position:absolute;inset:17% 0 20%;opacity:0;pointer-events:none;
+  background:radial-gradient(ellipse 20% 48% at 50% 64%,color-mix(in srgb,var(--portal-accent) 27%,transparent),transparent 76%);
+  filter:blur(10px);transition:opacity .4s ease}
+.world__gate-rings{position:absolute;left:50%;top:51%;width:min(43vw,480px);aspect-ratio:1;border-radius:50%;
+  border:1px solid color-mix(in srgb,var(--portal-accent) 60%,transparent);opacity:0;
+  box-shadow:inset 0 0 35px color-mix(in srgb,var(--portal-accent) 20%,transparent),0 0 34px color-mix(in srgb,var(--portal-accent) 26%,transparent);
+  transform:translate(-50%,-50%) scale(.84);transition:opacity .45s ease,transform .55s ease}
+.world__gate-rings::before,.world__gate-rings::after{content:"";position:absolute;inset:15%;border-radius:50%;border:1px solid color-mix(in srgb,var(--portal-accent) 50%,transparent)}
+.world__gate-rings::after{inset:30%}
+.gateway[data-portal="live"] .world__gate-beam,.gateway[data-portal="xr"] .world__gate-beam,.gateway[data-portal="mobile"] .world__gate-beam,
+.gateway[data-portal="live"] .world__gate-rings,.gateway[data-portal="xr"] .world__gate-rings,.gateway[data-portal="mobile"] .world__gate-rings{opacity:.62}
+.gateway[data-portal="live"] .world__gate-rings,.gateway[data-portal="xr"] .world__gate-rings,.gateway[data-portal="mobile"] .world__gate-rings{transform:translate(-50%,-50%) scale(1)}
+.world__cursor-glow{position:absolute;inset:0;pointer-events:none;opacity:.2;
+  background:radial-gradient(ellipse 18% 24% at var(--field-pointer-x) var(--field-pointer-y),color-mix(in srgb,var(--portal-accent) 32%,transparent),transparent 85%);
+  transition:opacity .2s ease}
+.world__image{translate:var(--field-shift-x) var(--field-shift-y);will-change:auto}
+.portal-transition__cancel{margin-top:14px;border:1px solid #b1cbec7a;border-radius:999px;background:#101c37;color:#e8f4ff;padding:10px 20px;font-size:.73rem;letter-spacing:.12em;font-weight:800;cursor:pointer}
+.portal-transition__cancel:hover,.portal-transition__cancel:focus-visible{border-color:var(--portal-accent);color:#fff}
+html[data-quality="lite"] .world__cursor-glow,html[data-quality="lite"] .world__gate-beam{display:none}
+html[data-quality="lite"] .world__gate-rings{filter:none;opacity:.35}
+html[data-quality="lite"] .destiny{backdrop-filter:none;-webkit-backdrop-filter:none}
+html[data-quality="lite"] .world__aurora,html[data-quality="lite"] .world__haze,html[data-quality="lite"] .world__signal{animation:none;filter:none}
+html[data-quality="lite"] .world__star{display:none}
+html[data-motion="off"] .world__cursor-glow,html[data-motion="off"] .world__gate-beam{display:none}
+html[data-motion="off"] .world__gate-rings{transition:none;transform:translate(-50%,-50%) scale(1)}
+@media(max-width:720px){.world__gate-beam,.world__cursor-glow{display:none}.world__gate-rings{width:min(62vw,340px);top:24%}}
+@media(prefers-reduced-motion:reduce){.world__cursor-glow,.world__gate-beam{display:none!important}.world__gate-rings{transition:none!important;transform:translate(-50%,-50%) scale(1)}}
