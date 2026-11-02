@@ -46,6 +46,45 @@ def check_page(browser, url, label, width, height, reduced=False, mobile=False):
         page.keyboard.press("ArrowRight")
         assert page.locator(".destiny--xr").evaluate("(el) => document.activeElement === el")
         assert page.locator(".gateway").get_attribute("data-portal") == "xr"
+    # Rung 4 browser acceptance: opt-in export/import, pinning, keyboard and
+    # same-origin persistence. No remote identity / permission transfer.
+    if label == "pages-desktop":
+        import json
+        opener = page.locator(".field-open")
+        assert opener.is_visible()
+        opener.click()
+        assert page.locator("#field-companion").is_visible()
+        assert page.evaluate("document.activeElement.classList.contains('field-companion__close')")
+        page.locator("#field-alias").fill("Explorer 369")
+        page.locator(".field-companion__save").click()
+        page.locator('[data-field-pin="xr"]').click()
+        assert page.locator('[data-field-pin="xr"]').get_attribute("aria-pressed") == "true"
+        assert page.locator(".field-companion__pinned a").count() == 1
+        with page.expect_download() as pending:
+            page.locator(".field-companion__export").click()
+        exported = json.loads(Path(pending.value.path()).read_text(encoding="utf-8"))
+        assert exported["format"] == "phi-field-companion"
+        assert exported["profile"]["alias"] == "Explorer 369"
+        assert exported["profile"]["pinned"] == ["xr"]
+        rejected = dict(exported, permissions=["all"])
+        page.locator("#field-import-file").set_input_files(
+            {"name":"invalid.json","mimeType":"application/json","buffer":json.dumps(rejected).encode()})
+        assert "Import rejected" in page.locator(".field-companion__status").inner_text()
+        page.locator("#field-alias").fill("Temporary")
+        page.locator(".field-companion__save").click()
+        page.once("dialog", lambda dlg: dlg.accept())
+        page.locator("#field-import-file").set_input_files(
+            {"name":"field.json","mimeType":"application/json","buffer":json.dumps(exported).encode()})
+        assert page.locator("#field-alias").input_value() == "Explorer 369"
+        page.screenshot(path=str(SHOTS / "pages-field-companion.png"), full_page=True)
+        page.keyboard.press("Escape")
+        assert page.locator("#field-companion").is_hidden()
+        assert page.evaluate("document.activeElement.classList.contains('field-open')")
+        page.reload(wait_until="networkidle")
+        assert "Explorer 369" in page.locator(".field-greeting").inner_text()
+        page.locator(".field-open").click()
+        assert page.locator('[data-field-pin="xr"]').get_attribute("aria-pressed") == "true"
+        page.locator(".field-companion__close").click()
     page.locator(".destiny--mobile").click()
     page.wait_for_url("https://michaelwave369.github.io/PhiOS-Mobile/", timeout=10000)
     assert page.title() == "Mock PhiOS destination", label
