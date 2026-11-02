@@ -36,6 +36,8 @@ def check_page(browser, url, label, width, height, reduced=False, mobile=False):
     assert page.locator(".world__image").evaluate("(node) => getComputedStyle(node).backgroundImage.includes('phi-field-desktop-ui-ready.webp') || getComputedStyle(node).backgroundImage.includes('phi-field-mobile-full-world.webp')")
     assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"), f"{label}: horizontal overflow"
     assert not errors and not broken, f"{label}: errors={errors} 404s={broken}"
+    if mobile:
+        expect(page.locator("[data-control-hint]")).to_contain_text("TAP A PORTAL")
     page.screenshot(path=str(SHOTS / (label + ".png")), full_page=True)
     if reduced:
         assert page.locator(".motion-toggle").is_disabled()
