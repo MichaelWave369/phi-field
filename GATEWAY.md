@@ -25,3 +25,46 @@ The desktop, XR and Mobile anchors open the existing web-preview destinations. T
 - PRs run source checks plus a headless Chromium smoke workflow that tests both root and /phi-field/ hosting, responsive viewports, asset loading, reduced motion, selection and a mocked outbound launch. Screenshots are available as GitHub Actions artifacts.
 - Green browser emulation is **not** physical Quest 3 certification. Check with actual Quest Browser before declaring headset quality.
 - No automatic Netlify deploy. The existing production hostname remains unchanged.
+
+
+## Rung 4: Field Companion (local continuity, not central identity)
+
+The gateway now has an optional ΦSURF · COMPANION drawer: three PhiOS quick routes,
+links to Gen.E.Wrist / ΦSURF and PhiOperator, a display-only callsign, pinned routes,
+and an explicit last-visited route shortcut. All destination links remain ordinary
+external navigations, with no implicit user-data transfer.
+
+### Portable Field Companion v1 preferences
+
+The only accepted export is a small UTF-8 JSON record containing:
+
+- format: phi-field-companion
+- version: 1
+- profile: alias (0-32 printable characters), pinned (unique subset of live/xr/mobile),
+  and last (one route identifier or null)
+- appearance: effects (on or off)
+
+Imports reject unexpected fields, unrecognized routes, malformed records, and
+files exceeding 16 KiB. Each import requires explicit user confirmation. No account
+credential, token, PhiOperator badge, WorldAdapter capability, saved game, or private
+PhiOS memory is included or accepted. The plaintext export is not encrypted or
+tamper-proof, and its alias does not prove identity.
+
+A profile is saved only in the browser running that exact origin. The public
+GitHub Pages preview and the Netlify custom domain cannot silently share it.
+The user can export JSON on one and manually import it on the other. If storage
+is unavailable, the current session still works and export remains available.
+Reset clears only the Companion profile, not other applications or PhiOS settings.
+
+### Explicit scope of this rung
+
+- Gen.E.Wrist implements its own ΦSURF and WorldAdapter capability boundaries.
+  This gateway provides a navigation entry, not a privileged adapter.
+- PhiOperator retains its independent Passport format and learning progress.
+  Field Companion neither reads nor overwrites it.
+- PhiOS Live, XR, and Mobile do not yet implement Field Companion import.
+  End-to-end inter-app continuation will require separately reviewed receivers.
+- No automatic account linking, hidden cross-origin messages, cloud sync,
+  external telemetry, or Netlify deploy is introduced.
+
+See tests/test_gateway.py and tests/browser_smoke.py for contract and Chromium checks.
