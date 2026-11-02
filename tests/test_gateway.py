@@ -126,3 +126,36 @@ class Rung3LivingWorldTests(unittest.TestCase):
         self.assertIn('python tests/browser_smoke.py', workflow)
         self.assertIn('pull_request:', workflow)
         self.assertNotIn('netlify deploy', workflow.lower())
+
+
+class Rung4FieldCompanionTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.html = (ROOT / 'index.html').read_text(encoding='utf-8')
+        cls.js = (ROOT / 'assets/field-companion.js').read_text(encoding='utf-8')
+        cls.css = (ROOT / 'assets/field-companion.css').read_text(encoding='utf-8')
+
+    def test_companion_semantics_and_navigation(self):
+        self.assertIn('id="field-companion" role="dialog" aria-modal="true"', self.html)
+        self.assertIn('aria-controls="field-companion"', self.html)
+        self.assertIn('class="field-open" hidden', self.html)
+        self.assertIn('class="field-companion__close"', self.html)
+        self.assertIn("event.key === 'Escape'", self.js)
+        for route in ('live', 'xr', 'mobile'):
+            self.assertIn('data-field-route="' + route + '"', self.html)
+
+    def test_import_export_are_explicit_and_scoped(self):
+        self.assertIn('phi-field:companion:v1', self.js)
+        self.assertIn('MAX_FILE_BYTES = 16 * 1024', self.js)
+        self.assertIn('new Set(data.profile.pinned).size', self.js)
+        self.assertIn('window.confirm(', self.js)
+        self.assertIn('URL.revokeObjectURL(href)', self.js)
+        self.assertNotIn('postMessage(', self.js)
+        self.assertNotIn('fetch(', self.js)
+
+    def test_packaging_and_accessible_ui(self):
+        pack = (ROOT / 'scripts/package_site.py').read_text(encoding='utf-8')
+        self.assertIn("'assets/field-companion.js'", pack)
+        self.assertIn("'assets/field-companion.css'", pack)
+        self.assertIn('body.field-companion-open', self.css)
+        self.assertIn('prefers-reduced-motion:reduce', self.css)
