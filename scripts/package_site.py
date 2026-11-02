@@ -4,7 +4,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / 'dist'
-ASSETS = ('assets/styles.css', 'assets/app.js', 'assets/world.js')
+ASSETS = ('assets/styles.css', 'assets/app.js', 'assets/world.js', 'assets/field-companion.js', 'assets/field-companion.css')
 ROOT_FILES = (
     'index.html', 'favicon.svg', 'site.webmanifest', 'robots.txt',
     'sitemap.xml', 'netlify.toml', 'phi-field-desktop-ui-ready.webp',
