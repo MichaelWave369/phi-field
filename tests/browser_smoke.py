@@ -7,7 +7,7 @@ from pathlib import Path
 from shutil import copytree
 from tempfile import TemporaryDirectory
 from threading import Thread
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, expect
 
 ROOT = Path(__file__).resolve().parents[1]
 SHOTS = ROOT / "browser-artifacts"
@@ -69,13 +69,13 @@ def check_page(browser, url, label, width, height, reduced=False, mobile=False):
         rejected = dict(exported, permissions=["all"])
         page.locator("#field-import-file").set_input_files(
             {"name":"invalid.json","mimeType":"application/json","buffer":json.dumps(rejected).encode()})
-        assert "Import rejected" in page.locator(".field-companion__status").inner_text()
+        expect(page.locator(".field-companion__status")).to_contain_text("Import rejected")
         page.locator("#field-alias").fill("Temporary")
         page.locator(".field-companion__save").click()
         page.once("dialog", lambda dlg: dlg.accept())
         page.locator("#field-import-file").set_input_files(
             {"name":"field.json","mimeType":"application/json","buffer":json.dumps(exported).encode()})
-        assert page.locator("#field-alias").input_value() == "Explorer 369"
+        expect(page.locator("#field-alias")).to_have_value("Explorer 369")
         page.screenshot(path=str(SHOTS / "pages-field-companion.png"), full_page=True)
         page.keyboard.press("Escape")
         assert page.locator("#field-companion").is_hidden()
