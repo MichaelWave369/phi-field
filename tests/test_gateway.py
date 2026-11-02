@@ -158,4 +158,5 @@ class Rung4FieldCompanionTests(unittest.TestCase):
         self.assertIn("'assets/field-companion.js'", pack)
         self.assertIn("'assets/field-companion.css'", pack)
         self.assertIn('body.field-companion-open', self.css)
+        self.assertIn('body.field-companion-open .skip-link', self.css)
         self.assertIn('prefers-reduced-motion:reduce', self.css)
