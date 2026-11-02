@@ -81,7 +81,8 @@ html[data-preview="true"] .preview-ribbon{display:inline-flex}
 .portal-transition__cancel{margin-top:14px;border:1px solid #b1cbec7a;border-radius:999px;background:#101c37;color:#e8f4ff;padding:10px 20px;font-size:.73rem;letter-spacing:.12em;font-weight:800;cursor:pointer}
 .portal-transition__cancel:hover,.portal-transition__cancel:focus-visible{border-color:var(--portal-accent);color:#fff}
 html[data-quality="lite"] .world__cursor-glow,html[data-quality="lite"] .world__gate-beam{display:none}
-html[data-quality="lite"] .world__gate-rings{filter:none;opacity:.35}
+html[data-quality="lite"] .world__gate-rings{filter:none;opacity:0}
+html[data-quality="lite"] .gateway[data-portal="live"] .world__gate-rings,html[data-quality="lite"] .gateway[data-portal="xr"] .world__gate-rings,html[data-quality="lite"] .gateway[data-portal="mobile"] .world__gate-rings{opacity:.35}
 html[data-quality="lite"] .destiny{backdrop-filter:none;-webkit-backdrop-filter:none}
 html[data-quality="lite"] .world__aurora,html[data-quality="lite"] .world__haze,html[data-quality="lite"] .world__signal{animation:none;filter:none}
 html[data-quality="lite"] .world__star{display:none}
