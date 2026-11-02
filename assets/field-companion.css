@@ -45,3 +45,6 @@ body.field-companion-open{overflow:hidden}
 @media(max-width:950px){.masthead{gap:10px}.masthead__eyebrow{font-size:.55rem;letter-spacing:.1em}.field-open{padding:10px 12px;font-size:.62rem}}
 @media(max-width:720px){.masthead__eyebrow{display:none}.field-open{font-size:.57rem;padding:10px}.field-companion__panel{max-height:94svh}.field-companion__routes{grid-template-columns:1fr}.field-companion__routes a{min-height:40px}}
 @media(prefers-reduced-motion:reduce){.field-open{transition:none}}
+
+/* Keep global skip-navigation outside the active modal focus/visual stack. */
+body.field-companion-open .skip-link{visibility:hidden!important;pointer-events:none!important}
