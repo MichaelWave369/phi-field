@@ -35,6 +35,13 @@
     try { localStorage.setItem('phi-field:motion', motionEnabled ? 'on' : 'off'); } catch (_) { /* okay */ }
     renderMotion();
   });
+  window.addEventListener('phi-field:appearance-imported', event => {
+    const value = event.detail?.effects;
+    if (!['on','off'].includes(value)) return;
+    saved = value;
+    motionEnabled = !preferredReducedMotion?.matches && value === 'on';
+    renderMotion();
+  });
   preferredReducedMotion?.addEventListener?.('change', (event) => {
     if (event.matches) motionEnabled = false;
     else motionEnabled = saved === 'off' ? false : true;

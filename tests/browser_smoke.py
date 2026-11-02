@@ -7,7 +7,7 @@ from pathlib import Path
 from shutil import copytree
 from tempfile import TemporaryDirectory
 from threading import Thread
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, expect
 
 ROOT = Path(__file__).resolve().parents[1]
 SHOTS = ROOT / "browser-artifacts"
@@ -36,6 +36,8 @@ def check_page(browser, url, label, width, height, reduced=False, mobile=False):
     assert page.locator(".world__image").evaluate("(node) => getComputedStyle(node).backgroundImage.includes('phi-field-desktop-ui-ready.webp') || getComputedStyle(node).backgroundImage.includes('phi-field-mobile-full-world.webp')")
     assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"), f"{label}: horizontal overflow"
     assert not errors and not broken, f"{label}: errors={errors} 404s={broken}"
+    if mobile:
+        expect(page.locator("[data-control-hint]")).to_contain_text("TAP A PORTAL")
     page.screenshot(path=str(SHOTS / (label + ".png")), full_page=True)
     if reduced:
         assert page.locator(".motion-toggle").is_disabled()
@@ -46,6 +48,45 @@ def check_page(browser, url, label, width, height, reduced=False, mobile=False):
         page.keyboard.press("ArrowRight")
         assert page.locator(".destiny--xr").evaluate("(el) => document.activeElement === el")
         assert page.locator(".gateway").get_attribute("data-portal") == "xr"
+    # Rung 4 browser acceptance: opt-in export/import, pinning, keyboard and
+    # same-origin persistence. No remote identity / permission transfer.
+    if label == "pages-desktop":
+        import json
+        opener = page.locator(".field-open")
+        assert opener.is_visible()
+        opener.click()
+        assert page.locator("#field-companion").is_visible()
+        assert page.evaluate("document.activeElement.classList.contains('field-companion__close')")
+        page.locator("#field-alias").fill("Explorer 369")
+        page.locator(".field-companion__save").click()
+        page.locator('[data-field-pin="xr"]').click()
+        assert page.locator('[data-field-pin="xr"]').get_attribute("aria-pressed") == "true"
+        assert page.locator(".field-companion__pinned a").count() == 1
+        with page.expect_download() as pending:
+            page.locator(".field-companion__export").click()
+        exported = json.loads(Path(pending.value.path()).read_text(encoding="utf-8"))
+        assert exported["format"] == "phi-field-companion"
+        assert exported["profile"]["alias"] == "Explorer 369"
+        assert exported["profile"]["pinned"] == ["xr"]
+        rejected = dict(exported, permissions=["all"])
+        page.locator("#field-import-file").set_input_files(
+            {"name":"invalid.json","mimeType":"application/json","buffer":json.dumps(rejected).encode()})
+        expect(page.locator(".field-companion__status")).to_contain_text("Import rejected")
+        page.locator("#field-alias").fill("Temporary")
+        page.locator(".field-companion__save").click()
+        page.once("dialog", lambda dlg: dlg.accept())
+        page.locator("#field-import-file").set_input_files(
+            {"name":"field.json","mimeType":"application/json","buffer":json.dumps(exported).encode()})
+        expect(page.locator("#field-alias")).to_have_value("Explorer 369")
+        page.screenshot(path=str(SHOTS / "pages-field-companion.png"), full_page=True)
+        page.keyboard.press("Escape")
+        assert page.locator("#field-companion").is_hidden()
+        assert page.evaluate("document.activeElement.classList.contains('field-open')")
+        page.reload(wait_until="networkidle")
+        assert "Explorer 369" in page.locator(".field-greeting").inner_text()
+        page.locator(".field-open").click()
+        assert page.locator('[data-field-pin="xr"]').get_attribute("aria-pressed") == "true"
+        page.locator(".field-companion__close").click()
     page.locator(".destiny--mobile").click()
     page.wait_for_url("https://michaelwave369.github.io/PhiOS-Mobile/", timeout=10000)
     assert page.title() == "Mock PhiOS destination", label

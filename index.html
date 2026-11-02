@@ -19,8 +19,10 @@
   <link rel="preload" as="image" href="phi-field-desktop-ui-ready.webp" media="(min-width: 721px)" fetchpriority="high">
   <link rel="preload" as="image" href="phi-field-mobile-full-world.webp" media="(max-width: 720px)" fetchpriority="high">
   <link rel="stylesheet" href="assets/styles.css">
+  <link rel="stylesheet" href="assets/field-companion.css">
   <script src="assets/app.js" defer></script>
   <script src="assets/world.js" defer></script>
+  <script src="assets/field-companion.js" defer></script>
   <title>Φ FIELD | Choose Your Destiny</title>
 </head>
 <body>
@@ -49,6 +51,7 @@
     <header class="masthead">
       <a class="brand" href="./" aria-label="Phi Field home"><span class="brand__mark" aria-hidden="true">Φ</span><span>FIELD</span></a>
       <span class="masthead__eyebrow">Φ369 LABS <span aria-hidden="true">•</span> ENTER THE FIELD</span>
+      <button type="button" class="field-open" hidden aria-haspopup="dialog" aria-controls="field-companion" aria-expanded="false">ΦSURF · COMPANION</button>
       <span class="preview-ribbon">GITHUB PAGES · PREVIEW</span>
     </header>
 
@@ -58,6 +61,7 @@
         <h1>CHOOSE YOUR<br><span>DESTINY</span></h1>
         <p class="intro__subhead">ONE FIELD. THREE WAYS TO ENTER.</p>
         <p class="intro__caption">Your world. Your device. Your choice.</p>
+        <p class="field-greeting" aria-live="polite">LOCAL GUEST · NO ACCOUNT</p>
         <p class="intro__selection" aria-hidden="true"><span class="intro__selection-dot"></span><span class="intro__selection-text">THREE PORTALS READY</span></p>
       </div>
 
@@ -98,6 +102,57 @@
       <span class="portal-transition__note">Opening the selected web experience…</span>
       <button type="button" class="portal-transition__cancel">CANCEL LAUNCH</button>
     </div>
+
+
+    <section class="field-companion" id="field-companion" role="dialog" aria-modal="true" aria-labelledby="field-companion-title" hidden>
+      <div class="field-companion__backdrop" aria-hidden="true"></div>
+      <div class="field-companion__panel">
+        <div class="field-companion__head">
+          <div>
+            <p class="field-companion__kicker">ΦSURF · LOCAL NAVIGATION</p>
+            <h2 id="field-companion-title">FIELD COMPANION</h2>
+          </div>
+          <button type="button" class="field-companion__close" aria-label="Close Field Companion">✕</button>
+        </div>
+        <p class="field-companion__description">Your own local callsign, portal shortcuts, and a portable record of your gateway preferences. No account required.</p>
+        <p class="field-companion__notice">A callsign is a display label, NOT verified identity. This panel does not import PhiOperator achievements, transfer private app data, synchronize websites, or grant PhiOS / Gen.E.Wrist permissions.</p>
+        <div class="field-companion__inputrow">
+          <label for="field-alias">YOUR FIELD CALLSIGN (OPTIONAL)
+            <input id="field-alias" type="text" maxlength="32" autocomplete="off" spellcheck="false" placeholder="FIELD EXPLORER">
+          </label>
+          <button type="button" class="field-companion__action field-companion__save">SAVE ON THIS DEVICE</button>
+        </div>
+        <h3>3 FIELD ROUTES</h3>
+        <nav class="field-companion__routes" aria-label="PhiSurf portal shortcuts">
+          <a data-field-route="live" href="https://michaelwave369.github.io/PhiOS/">01 · LIVE ↗</a>
+          <a data-field-route="xr" href="https://michaelwave369.github.io/PhiOS-XR/">02 · XR ↗</a>
+          <a data-field-route="mobile" href="https://michaelwave369.github.io/PhiOS-Mobile/">03 · MOBILE ↗</a>
+        </nav>
+        <h3>YOUR PINNED PORTALS</h3>
+        <div class="field-companion__pins" aria-label="Choose local shortcuts">
+          <button type="button" data-field-pin="live" aria-pressed="false">☆ PIN PHIOS LIVE</button>
+          <button type="button" data-field-pin="xr" aria-pressed="false">☆ PIN PHIOS XR</button>
+          <button type="button" data-field-pin="mobile" aria-pressed="false">☆ PIN PHIOS MOBILE</button>
+        </div>
+        <nav class="field-companion__pinned" aria-label="Pinned Field shortcuts"></nav>
+        <a class="field-companion__resume" hidden href="https://michaelwave369.github.io/PhiOS/">CONTINUE LAST PORTAL ↗</a>
+        <h3>RELATED FIELD TOOLS</h3>
+        <div class="field-companion__tools">
+          <a href="https://michaelwave369.github.io/GenEWrist/">GEN.E.WRIST / ΦSURF ↗</a>
+          <a href="https://michaelwave369.github.io/PhiOperator/">PHIOPERATOR ↗</a>
+        </div>
+        <h3>USER-CONTROLLED TRANSFER</h3>
+        <div class="field-companion__actions">
+          <button type="button" class="field-companion__action field-companion__export">EXPORT PREFERENCES JSON</button>
+          <button type="button" class="field-companion__action field-companion__import">IMPORT PREFERENCES JSON</button>
+          <input type="file" id="field-import-file" accept=".json,application/json" hidden>
+          <button type="button" class="field-companion__action field-companion__reset">CLEAR COMPANION PROFILE</button>
+        </div>
+        <p class="field-companion__status" role="status" aria-live="polite"></p>
+        <p class="field-companion__storage">Stored locally in this browser only.</p>
+        <p class="field-companion__notice">To move between this GitHub preview and phi-field.com, export JSON here and manually import there. The file is plaintext. No automatic cross-site sync or login occurs.</p>
+      </div>
+    </section>
 
     <footer class="footer">
       <span>SOVEREIGN <span aria-hidden="true">·</span> LOCAL-FIRST <span aria-hidden="true">·</span> OPEN SOURCE</span>
