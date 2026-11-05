@@ -81,6 +81,16 @@ def check_phone(browser,base):
     assert not errors,errors
     context.close()
 
+def check_gateway_boot(browser,base):
+    context=browser.new_context(viewport={'width':1280,'height':800})
+    page=context.new_page()
+    page.goto(base+'/',wait_until='networkidle')
+    assert page.locator('.destiny--live').get_attribute('href')=='./os/'
+    page.locator('.destiny--live').click()
+    page.wait_for_url(base+'/os/',timeout=10000)
+    assert page.title()=='Φ PhiOS Web · Browser Boot Alpha'
+    context.close()
+
 def main():
     assert (ROOT/'dist/os/index.html').exists(),'Build the Netlify bundle first'
     server=ThreadingHTTPServer(('127.0.0.1',0),partial(Quiet,directory=str(ROOT/'dist')))
@@ -90,6 +100,7 @@ def main():
         with sync_playwright() as p:
             browser=p.chromium.launch(headless=True)
             base='http://127.0.0.1:'+str(server.server_port)
+            check_gateway_boot(browser,base)
             check_desktop(browser,base)
             check_phone(browser,base)
             browser.close()
