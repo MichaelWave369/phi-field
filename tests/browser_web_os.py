@@ -94,7 +94,7 @@ def check_desktop(browser,base):
     page.once("dialog",lambda d:d.accept())
     page.locator('#shelfImportFile').set_input_files({"name":"shelf.json","mimeType":"application/json",
         "buffer":json.dumps(shelf_backup).encode("utf-8")})
-    assert page.locator('#shelf-list .shelf-entry').count()==1
+    expect(page.locator('#shelf-list .shelf-entry')).to_have_count(1)
     expect(page.locator('#shelf-status')).to_contain_text("source bookmarks")
     page.screenshot(path=str(SHOTS/'phios-web-desktop.png'),full_page=True)
     assert not errors,errors
