@@ -5,7 +5,7 @@
   const APPS = Object.freeze({
     files:{title:'File Manager',glyph:'▤'},notes:{title:'Notes Editor',glyph:'✎'},
     terminal:{title:'Safe Console',glyph:'⌘'},ledger:{title:'Local Activity Ledger',glyph:'◇'},
-    settings:{title:'Settings & Backup',glyph:'⚙'},about:{title:'About PhiOS Web',glyph:'Φ'}
+    settings:{title:'Settings & Backup',glyph:'⚙'},catalog:{title:'Public App Catalog',glyph:'✦'},about:{title:'About PhiOS Web',glyph:'Φ'}
   });
   const STORE = 'phi-web-r1';
   const FILE_LIMIT = 50000, FILE_COUNT = 100, IMPORT_LIMIT = 512000, LEDGER_LIMIT = 80;
@@ -94,6 +94,7 @@
     if(app==='terminal')return renderTerminal(body);
     if(app==='ledger')return renderLedger(body);
     if(app==='settings')return renderSettings(body);
+    if(app==='catalog')return renderCatalog(body);
     return renderAbout(body);
   }
   function shell(body,markup){body.innerHTML=markup;}
@@ -151,6 +152,55 @@
     shell(body,'<h2>Settings & Sovereignty</h2><p class="help">Your files stay under this website\'s browser storage. Clearing site data or private browsing may erase them. Export regularly.</p><label class="label">LOCAL CALLSIGN <input class="field" id="alias" maxlength="40" autocomplete="off"></label><div class="setting"><input type="checkbox" id="effects"><label for="effects">Enable cosmetic space effects</label></div><div class="toolbar"><button class="btn primary" data-action="save-prefs">SAVE PREFERENCES</button></div><h3>Data portability</h3><div class="toolbar"><button class="btn" data-action="export">EXPORT JSON</button><button class="btn" data-action="import">IMPORT JSON</button><button class="btn danger" data-action="wipe">RESET LOCAL WORKSPACE</button></div><p class="notice">Imports replace this browser workspace only after confirmation. Exported JSON is unencrypted and may contain private notes. No account or cross-site syncing exists.</p><p class="status-message">Storage: <span id="storageState"></span></p>');
     $('#alias',body).value=state.prefs.alias;$('#effects',body).checked=state.prefs.effects;
     $('#storageState',body).textContent=state.storage==='indexeddb'?'IndexedDB on this browser origin':'Session only (storage unavailable)';
+  }
+  function publicCatalog(){
+    const catalog=window.PHI_PUBLIC_CATALOG;
+    if(!catalog||catalog.schema!=='phios.public-repo-catalog.v1'||
+       catalog?.provenance?.scope!=='public'||catalog?.provenance?.complete!==true||
+       catalog?.policy?.automatic_install!==false||catalog?.policy?.automatic_launch!==false||
+       catalog?.policy?.review_required!==true||!Array.isArray(catalog.apps))return null;
+    const seen=new Set();
+    const apps=[];
+    for(const app of catalog.apps){
+      if(!app||typeof app.name!=='string'||!/^[A-Za-z0-9_.-]{1,100}$/.test(app.name)||
+         typeof app.id!=='string'||!/^github:[0-9]{1,20}$/.test(app.id)||
+         app.availability!=='source_only'||seen.has(app.id)||
+         app.repository!=='https://github.com/MichaelWave369/'+app.name) return null;
+      seen.add(app.id);
+      apps.push(app);
+    }
+    return {apps,snapshot:catalog.provenance.snapshot_fetched_at};
+  }
+  function renderCatalog(body){
+    const data=publicCatalog();
+    if(!data){shell(body,'<h2>Public App Catalog</h2><p class="notice">Pinned catalog unavailable or invalid. No app installation or execution is permitted.</p>');return;}
+    shell(body,'<h2>Public App Catalog</h2><p class="notice">DISCOVERY ONLY. These public GitHub sources are not verified apps. VIEW SOURCE opens GitHub in a new tab; no software is installed, imported or executed.</p><div class="toolbar"><label class="label">SEARCH PUBLIC REPOSITORIES <input class="field" id="catalog-search" type="search" autocomplete="off" placeholder="Find a project"></label></div><p class="catalog-meta" id="catalog-meta" role="status" aria-live="polite"></p><div class="catalog-items" id="catalog-items"></div><button class="btn" id="catalog-more" type="button" hidden>SHOW MORE PROJECTS</button>');
+    const input=$('#catalog-search',body),items=$('#catalog-items',body),
+          meta=$('#catalog-meta',body),more=$('#catalog-more',body);
+    let matches=data.apps,shown=0;
+    const append=()=>{
+      const batch=matches.slice(shown,shown+35);
+      for(const entry of batch){
+        const row=document.createElement('article');row.className='catalog-entry';
+        const info=document.createElement('div');info.className='catalog-info';
+        const title=document.createElement('strong');title.textContent=entry.name;
+        const desc=document.createElement('p');desc.textContent=entry.description||'No description provided.';
+        const state=document.createElement('small');state.textContent=(entry.language||'Unknown language')+' · SOURCE ONLY'+(entry.archived?' · ARCHIVED':'');
+        const link=document.createElement('a');link.className='btn';link.target='_blank';link.rel='noopener noreferrer';link.href=entry.repository;link.textContent='VIEW SOURCE ↗';link.setAttribute('aria-label','View '+entry.name+' public GitHub source in a new tab');
+        info.append(title,desc,state);row.append(info,link);items.append(row);
+      }
+      shown+=batch.length;
+      more.hidden=shown>=matches.length;
+      meta.textContent=matches.length+' / '+data.apps.length+' public repositories · snapshot '+data.snapshot+' · '+shown+' displayed';
+    };
+    more.addEventListener('click',append);
+    input.addEventListener('input',()=>{
+      const needle=input.value.trim().toLowerCase().slice(0,100);
+      matches=data.apps.filter(app=>app.name.toLowerCase().includes(needle)||
+        (app.description||'').toLowerCase().includes(needle));
+      shown=0;items.replaceChildren();append();
+    });
+    append();
   }
   function renderAbout(body){
     shell(body,'<h2>Φ PhiOS Web Alpha 0.1</h2><p>A genuine unprivileged browser workspace built as the first PhiOS web rung.</p><div class="checks"><div class="check"><b>WORKING NOW</b>Files, notes, window management, local IndexedDB, portable JSON, safe commands, offline app shell.</div><div class="check"><b>NOT PRESENT</b>Linux boot, PC filesystem, native installs, local models, agent execution, remote bridge.</div><div class="check"><b>LOCAL AUTHORITY</b>Only explicit user interactions inside this webpage. No background agent or privileged operation.</div><div class="check"><b>OPEN DEVELOPMENT</b>Alpha software. Local history does not qualify as independent audit evidence.</div></div><p class="notice">Capability ≠ Authority. A working interface does not grant access to your computer or your private PhiOS runtime.</p><div class="toolbar"><a class="btn" href="https://github.com/MichaelWave369/PhiOS" target="_blank" rel="noopener noreferrer">PHIOS SOURCE ↗</a><a class="btn" href="../">RETURN TO GATEWAY ↗</a></div>');
