@@ -8,7 +8,7 @@ ASSETS = ('assets/styles.css', 'assets/app.js', 'assets/world.js', 'assets/field
 OS_FILES = (
     'os/index.html', 'os/styles.css', 'os/webos.js', 'os/sw.js',
     'os/manifest.webmanifest', 'os/icon.svg', 'os/README.md',
-    'os/public-repo-catalog.v1.json', 'os/catalog-data.js',
+    'os/public-repo-catalog.v1.json', 'os/catalog-data.js', 'os/shelf-portable.js',
 )
 ROOT_FILES = (
     'index.html', 'favicon.svg', 'site.webmanifest', 'robots.txt',

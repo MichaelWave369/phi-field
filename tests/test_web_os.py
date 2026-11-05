@@ -37,7 +37,7 @@ class WebOSContracts(unittest.TestCase):
             self.assertIn(name, self.html_tree.ids)
         for app in ('files', 'notes', 'terminal', 'ledger', 'settings', 'catalog', 'about'):
             self.assertIn('data-open="'+app+'"', self.html)
-        self.assertEqual(self.html_tree.scripts, [{'src': './catalog-data.js', 'defer': None}, {'src': './webos.js', 'defer': None}])
+        self.assertEqual(self.html_tree.scripts, [{'src': './catalog-data.js', 'defer': None}, {'src': './shelf-portable.js', 'defer': None}, {'src': './webos.js', 'defer': None}])
         self.assertIn('prefers-reduced-motion:reduce', self.css)
         self.assertIn('type="file"', self.html)
 
@@ -86,10 +86,23 @@ class WebOSContracts(unittest.TestCase):
         self.assertIn('DISCOVERY ONLY', self.js)
         self.assertNotIn('data-action="install"', self.js)
 
+    def test_portable_shelf_is_source_only_and_has_separate_storage(self):
+        shelf = (OS / 'shelf-portable.js').read_text(encoding='utf-8')
+        self.assertIn("phios-app-shelf", shelf)
+        self.assertIn("LIMIT=24", shelf)
+        self.assertIn("automatic_install!==false", shelf)
+        for marker in ("id=\"app-shelf\"", "id=\"shelfImportFile\"", "id=\"shelf-list\""):
+            self.assertIn(marker, self.html)
+        self.assertIn("kvPut(state.db,'app-shelf-r2'", self.js)
+        self.assertIn("await restoreShelf()", self.js)
+        self.assertIn("api.parse(await file.text(),catalog)", self.js)
+        self.assertIn("data-shelf-action", self.js)
+        self.assertIn("shelf-portable.js", self.sw)
+
     def test_bundle_copies_webos_but_does_not_repoint_live_gateway(self):
         pack = (ROOT / 'scripts/package_site.py').read_text(encoding='utf-8')
         for name in ('os/index.html', 'os/styles.css', 'os/webos.js', 'os/sw.js',
-                     'os/catalog-data.js', 'os/public-repo-catalog.v1.json'):
+                     'os/catalog-data.js', 'os/shelf-portable.js', 'os/public-repo-catalog.v1.json'):
             self.assertIn(name, pack)
         gateway = (ROOT / 'index.html').read_text(encoding='utf-8')
         self.assertIn('href="./os/" data-destination="live"', gateway)

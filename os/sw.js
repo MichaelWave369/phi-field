@@ -1,6 +1,6 @@
 /* Offline shell only. Scoped to /os/, never intercepts the Phi Field gateway. */
-const CACHE='phios-web-alpha-catalog-r1-v2';
-const ASSETS=['./','./index.html','./styles.css','./webos.js','./catalog-data.js','./public-repo-catalog.v1.json','./icon.svg','./manifest.webmanifest'];
+const CACHE='phios-web-alpha-shelf-r2-v3';
+const ASSETS=['./','./index.html','./styles.css','./webos.js','./catalog-data.js','./shelf-portable.js','./public-repo-catalog.v1.json','./icon.svg','./manifest.webmanifest'];
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting()));
 });

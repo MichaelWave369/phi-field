@@ -72,6 +72,30 @@ def check_desktop(browser,base):
     assert catalog.locator('.catalog-entry').count()>=1
     assert catalog.locator('.catalog-entry a').first.get_attribute('href').startswith('https://github.com/MichaelWave369/')
     assert catalog.get_by_text('INSTALL',exact=True).count()==0
+    # Universal Shelf R2: pin, reorder, export and restore portable source IDs.
+    catalog.locator('.catalog-entry [data-shelf-action="pin"]').first.click()
+    assert page.locator('#shelf-list .shelf-entry').count()==1
+    page.locator('.window[data-app="catalog"] [data-control="close"]').click()
+    with page.expect_download() as shelf_export:
+        page.locator('[data-shelf-action="export"]').click()
+    shelf_backup=json.loads(Path(shelf_export.value.path()).read_text(encoding="utf-8"))
+    assert shelf_backup["format"]=="phios-app-shelf"
+    assert shelf_backup["version"]==1
+    assert len(shelf_backup["pinned"])==1
+    page.reload(wait_until="networkidle")
+    page.locator('.window[data-app="about"] [data-control="close"]').click()
+    assert page.locator('#shelf-list .shelf-entry').count()==1,"Source pin did not survive reload"
+    page.locator('#shelfImportFile').set_input_files({"name":"malicious.json","mimeType":"application/json",
+        "buffer":json.dumps(dict(shelf_backup,install_authority=True)).encode("utf-8")})
+    expect(page.locator('#toast')).to_contain_text("Shelf import refused")
+    assert page.locator('#shelf-list .shelf-entry').count()==1
+    page.locator('#shelf-list [data-shelf-action="unpin"]').click()
+    assert page.locator('#shelf-list .shelf-entry').count()==0
+    page.once("dialog",lambda d:d.accept())
+    page.locator('#shelfImportFile').set_input_files({"name":"shelf.json","mimeType":"application/json",
+        "buffer":json.dumps(shelf_backup).encode("utf-8")})
+    expect(page.locator('#shelf-list .shelf-entry')).to_have_count(1)
+    expect(page.locator('#shelf-status')).to_contain_text("source bookmarks")
     page.screenshot(path=str(SHOTS/'phios-web-desktop.png'),full_page=True)
     assert not errors,errors
     context.close()

@@ -12,7 +12,7 @@
   const $ = (sel,ctx=document) => ctx.querySelector(sel);
   const windows = new Map();
   const state = {db:null,storage:'starting',docs:[],prefs:{alias:'Field Explorer',effects:true},events:[],
-    activeDoc:null,front:10,term:['PhiOS WEB ALPHA 0.1  ·  UNPRIVILEGED CONSOLE','Type help for supported commands. No host shell access.']};
+    activeDoc:null,shelf:[],front:10,term:['PhiOS WEB ALPHA 0.1  ·  UNPRIVILEGED CONSOLE','Type help for supported commands. No host shell access.']};
   const randomId = () => globalThis.crypto?.randomUUID?.() ?? 'doc-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);
   const initialDoc = () => ({id:randomId(),name:'WELCOME.txt',text:
     'Welcome to PhiOS Web Alpha.\n\nThis is a real browser workspace.\nCreate files and notes, use the safe console, inspect the local activity history, and export your data.\n\nAll content stays in this browser unless you explicitly export it.\nThe browser edition does NOT run the Linux OS, access your PC, run arbitrary commands, or connect to a private PhiOS service.\n\nCapability is not authority.'});
@@ -171,6 +171,94 @@
     }
     return {apps,snapshot:catalog.provenance.snapshot_fetched_at};
   }
+  // App Shelf pins public source identities only. Never launch/install from a pin.
+  const shelfCatalog=()=>window.PHI_PUBLIC_CATALOG;
+  const shelfApi=()=>globalThis.PhiShelf;
+  function renderShelf(){
+    const target=$('#shelf-list'),status=$('#shelf-status');
+    if(!target||!status)return;
+    target.replaceChildren();
+    const api=shelfApi(),catalog=shelfCatalog(),data=publicCatalog();
+    if(!api||!data){status.textContent='Public source catalog unavailable. Shelf controls are disabled.';return;}
+    const map=new Map(data.apps.map(item=>[item.id,item]));
+    status.textContent=state.shelf.length+' / '+api.LIMIT+' source bookmarks · '+(state.db?'saved in this browser':'session only; export to keep')+' · no installs';
+    for(const [index,id] of state.shelf.entries()){
+      const entry=map.get(id);
+      if(!entry)continue;
+      const row=document.createElement('div');row.className='shelf-entry';row.setAttribute('role','listitem');
+      const details=document.createElement('div');details.className='shelf-details';
+      const name=document.createElement('strong');name.textContent=entry.name;
+      const label=document.createElement('small');label.textContent=api.badge(entry);
+      const link=document.createElement('a');link.href=entry.repository;link.target='_blank';link.rel='noopener noreferrer';link.textContent='VIEW SOURCE ↗';link.setAttribute('aria-label','View '+entry.name+' source');
+      details.append(name,label,link);
+      const controls=document.createElement('div');controls.className='shelf-controls';
+      for(const [action,text,disabled] of [['up','↑',index===0],['down','↓',index===state.shelf.length-1],['unpin','×',false]]){
+        const button=document.createElement('button');button.type='button';button.dataset.shelfAction=action;
+        button.dataset.sourceId=id;button.textContent=text;button.disabled=disabled;
+        button.setAttribute('aria-label',(action==='up'?'Move ':action==='down'?'Move ':'Unpin ')+entry.name+
+          (action==='up'?' up':action==='down'?' down':''));
+        controls.append(button);
+      }
+      row.append(details,controls);target.append(row);
+    }
+    if(!state.shelf.length){
+      const empty=document.createElement('p');empty.className='muted';empty.textContent='Nothing pinned yet. Open App Catalog and pin a public source.';
+      target.append(empty);
+    }
+  }
+  function refreshCatalogPins(){
+    document.querySelectorAll('.catalog-entry [data-shelf-action]').forEach(button=>{
+      const on=state.shelf.includes(button.dataset.sourceId);
+      button.dataset.shelfAction=on?'unpin':'pin';
+      button.textContent=on?'UNPIN':'PIN SOURCE';
+      button.setAttribute('aria-pressed',String(on));
+    });
+  }
+  function applyShelf(next){
+    const api=shelfApi(),catalog=shelfCatalog();
+    state.shelf=api.normalize(next,catalog);
+    renderShelf();refreshCatalogPins();
+    if(state.db){
+      api.packet(state.shelf,catalog);
+      kvPut(state.db,'app-shelf-r2',api.packet(state.shelf,catalog)).catch(()=>{
+        state.db=null;state.storage='session';updateBadge();renderShelf();
+        notify('Shelf storage failed; export shelf to keep bookmarks.');
+      });
+    }
+  }
+  function exportShelf(){
+    const api=shelfApi(),catalog=shelfCatalog();
+    try{
+      const payload=JSON.stringify(api.packet(state.shelf,catalog),null,2);
+      const url=URL.createObjectURL(new Blob([payload],{type:'application/json'}));
+      const anchor=document.createElement('a');anchor.href=url;anchor.download='phios-app-shelf-r2.json';
+      document.body.append(anchor);anchor.click();anchor.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),1000);
+      notify('Portable source-only shelf exported. JSON is readable.');
+    }catch(e){notify('Export unavailable: '+e.message);}
+  }
+  async function importShelf(file){
+    if(!file)return;
+    const api=shelfApi(),catalog=shelfCatalog();
+    if(!api||!catalog){notify('Catalog unavailable. Import refused.');return;}
+    if(file.size>api.MAX_BYTES){notify('Shelf import exceeds 16 KiB.');return;}
+    try{
+      const incoming=api.parse(await file.text(),catalog);
+      if(!window.confirm('Replace only the '+state.shelf.length+' pinned source bookmarks with '+incoming.length+' imported pins? Notes and settings will stay.'))return;
+      applyShelf(incoming);notify('Source bookmarks imported. No software installed.');
+    }catch(e){notify('Shelf import refused: '+e.message);}
+  }
+  async function restoreShelf(){
+    const api=shelfApi(),catalog=shelfCatalog();
+    if(!api||!catalog){renderShelf();return;}
+    if(state.db){
+      try{
+        const saved=await kvGet(state.db,'app-shelf-r2');
+        if(saved)state.shelf=api.parse(JSON.stringify(saved),catalog);
+      }catch(e){state.shelf=[];notify('Stored shelf invalid. Export existing files separately; no shelf was imported.');}
+    }
+    renderShelf();
+  }
   function renderCatalog(body){
     const data=publicCatalog();
     if(!data){shell(body,'<h2>Public App Catalog</h2><p class="notice">Pinned catalog unavailable or invalid. No app installation or execution is permitted.</p>');return;}
@@ -185,9 +273,14 @@
         const info=document.createElement('div');info.className='catalog-info';
         const title=document.createElement('strong');title.textContent=entry.name;
         const desc=document.createElement('p');desc.textContent=entry.description||'No description provided.';
-        const state=document.createElement('small');state.textContent=(entry.language||'Unknown language')+' · SOURCE ONLY'+(entry.archived?' · ARCHIVED':'');
+        const label=document.createElement('small');label.textContent=(entry.language||'Unknown language')+' · '+shelfApi().badge(entry)+(entry.archived?' · ARCHIVED':'');
         const link=document.createElement('a');link.className='btn';link.target='_blank';link.rel='noopener noreferrer';link.href=entry.repository;link.textContent='VIEW SOURCE ↗';link.setAttribute('aria-label','View '+entry.name+' public GitHub source in a new tab');
-        info.append(title,desc,state);row.append(info,link);items.append(row);
+        const actions=document.createElement('div');actions.className='catalog-actions';
+        const pin=document.createElement('button');pin.type='button';pin.className='btn';pin.dataset.sourceId=entry.id;
+        const selected=state.shelf.includes(entry.id);pin.dataset.shelfAction=selected?'unpin':'pin';pin.textContent=selected?'UNPIN':'PIN SOURCE';
+        pin.setAttribute('aria-pressed',String(selected));pin.setAttribute('aria-label',(selected?'Unpin ':'Pin ')+entry.name);
+        actions.append(pin,link);
+        info.append(title,desc,label);row.append(info,actions);items.append(row);
       }
       shown+=batch.length;
       more.hidden=shown>=matches.length;
@@ -255,6 +348,19 @@
   function applyEffects(){document.body.dataset.noEffects=String(!state.prefs.effects);}
   function actions(){
     document.addEventListener('click',ev=>{
+      const shelf=ev.target.closest('[data-shelf-action]');
+      if(shelf){
+        const action=shelf.dataset.shelfAction,id=shelf.dataset.sourceId,api=shelfApi(),catalog=shelfCatalog();
+        if(!api||!catalog){notify('Catalog unavailable; shelf unchanged.');return;}
+        if(action==='export'){exportShelf();return;}
+        if(action==='import'){$('#shelfImportFile').click();return;}
+        try{
+          if(action==='pin')applyShelf(api.pin(state.shelf,id,catalog));
+          if(action==='unpin')applyShelf(api.unpin(state.shelf,id,catalog));
+          if(action==='up'||action==='down')applyShelf(api.move(state.shelf,id,action==='up'?-1:1,catalog));
+        }catch(e){notify(e.message);}
+        return;
+      }
       const open=ev.target.closest('[data-open]');if(open){openWindow(open.dataset.open);closeMenu();return;}
       const control=ev.target.closest('[data-control]');if(control){
         const win=control.closest('.window'),id=win?.dataset.app;if(!win)return;
@@ -295,6 +401,7 @@
     button.addEventListener('click',()=>{menu.hidden=!menu.hidden;button.setAttribute('aria-expanded',String(!menu.hidden));});
     document.addEventListener('keydown',ev=>{if(ev.key==='Escape'){closeMenu();const front=[...windows.values()].filter(w=>!w.hidden).sort((a,b)=>(+b.style.zIndex)-(+a.style.zIndex))[0];if(front)front.hidden=true,drawDock();}});
     $('#importFile').addEventListener('change',async ev=>{await importData(ev.target.files?.[0]);ev.target.value='';});
+    $('#shelfImportFile').addEventListener('change',async ev=>{await importShelf(ev.target.files?.[0]);ev.target.value='';});
     bindDrag();
   }
   async function boot(){
@@ -309,7 +416,7 @@
     }
     if(!state.docs.length)state.docs=[initialDoc()];
     state.activeDoc=state.docs[0].id;
-    applyEffects();updateBadge();eventLog('Browser session started: no native permissions');persist();
+    applyEffects();updateBadge();await restoreShelf();eventLog('Browser session started: no native permissions');persist();
     if('serviceWorker' in navigator && location.protocol==='https:'){
       navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(()=>{/* Optional offline shell registration */});
     }
