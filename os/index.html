@@ -6,6 +6,7 @@
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="stylesheet" href="./styles.css">
+<script src="./catalog-data.js" defer></script>
 <script src="./webos.js" defer></script>
 </head><body>
 <a class="skip" href="#desktop">Skip to desktop</a>
@@ -23,6 +24,7 @@
 <button type="button" data-open="terminal"><span aria-hidden="true">⌘</span><strong>Console</strong></button>
 <button type="button" data-open="ledger"><span aria-hidden="true">◇</span><strong>Ledger</strong></button>
 <button type="button" data-open="settings"><span aria-hidden="true">⚙</span><strong>Settings</strong></button>
+<button type="button" data-open="catalog"><span aria-hidden="true">✦</span><strong>App Catalog</strong></button>
 <button type="button" data-open="about"><span aria-hidden="true">Φ</span><strong>About</strong></button>
 </nav>
 <div id="windows" class="windows" aria-live="off"></div>
@@ -36,6 +38,7 @@
 <button type="button" role="menuitem" data-open="terminal">⌘ Safe Console</button>
 <button type="button" role="menuitem" data-open="ledger">◇ Local Activity Ledger</button>
 <button type="button" role="menuitem" data-open="settings">⚙ Settings & Backup</button>
+<button type="button" role="menuitem" data-open="catalog">✦ Public App Catalog</button>
 <button type="button" role="menuitem" data-open="about">Φ System Information</button>
 </div>
 <input type="file" id="importFile" accept=".json,application/json" hidden aria-label="Choose local PhiOS Web backup JSON">
