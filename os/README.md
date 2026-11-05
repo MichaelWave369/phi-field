@@ -23,6 +23,12 @@ The self-contained release includes the canonical JSON and equivalent local JS d
 
 An actual install requires a platform-specific, qualified app manifest, exact source/artifact and license review, verified runtime adapter and human approval. Browser bookmarking or source discovery is **not** application installation.
 
+## Universal App Shelf R2
+
+The Web desktop now shows a persistent **App Shelf** beneath the local app shortcuts. Use **PIN SOURCE** in App Catalog, reorder entries with Up/Down, and explicitly export/import `phios-app-shelf` v1 JSON (24 public pins maximum, 16 KiB import bound). These are GitHub source bookmarks only, **never native or web installs**. The UI displays `SOURCE ONLY` and separately notes unverified declared websites. Data saves in a dedicated IndexedDB record on this origin, independently of notes and the full workspace backup. Other devices need an explicit portable-shelf export/import; no automatic syncing takes place.
+
+The portable JavaScript implementation is byte-identical to `PhiOS/interop/shelf-portable.v1.js` and `PhiOS-Mobile/src/shelf-portable.js`. The native PhiOS Python CLI can read the same shelf JSON but is not yet a full PhiShell GUI integration. See the [R2 contract](https://github.com/MichaelWave369/PhiOS/blob/main/docs/PHIOS_UNIVERSAL_SHELL_R2_APP_SHELF.md) after merge. This remains a manual Netlify release.
+
 ## Test and rollout
 
 The static site packaging includes `os/` in the Netlify-ready ZIP, with `/os/index.html` as the entry point, and supports GitHub Pages under `/phi-field/os/`. The staged release root gateway's **PhiOS Live** button now points to its own `./os/` folder. Nothing changes at the live Netlify site until the owner manually uploads the approved ZIP. The R1 app is also independently launchable.
