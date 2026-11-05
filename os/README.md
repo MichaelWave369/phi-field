@@ -17,7 +17,7 @@ Data is **not synchronized** between GitHub Pages and Netlify: each origin has d
 
 ## Test and rollout
 
-The static site packaging includes `os/` in the Netlify-ready ZIP, with `/os/index.html` as the entry point, and supports GitHub Pages under `/phi-field/os/`. The production root gateway's **PhiOS Live** link continues to its existing destination pending manual release approval and acceptance testing. The R1 app is intentionally independently launchable.
+The static site packaging includes `os/` in the Netlify-ready ZIP, with `/os/index.html` as the entry point, and supports GitHub Pages under `/phi-field/os/`. The staged release root gateway's **PhiOS Live** button now points to its own `./os/` folder. Nothing changes at the live Netlify site until the owner manually uploads the approved ZIP. The R1 app is also independently launchable.
 
 Run:
 ```sh
