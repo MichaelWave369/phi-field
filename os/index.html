@@ -7,6 +7,7 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="stylesheet" href="./styles.css">
 <script src="./catalog-data.js" defer></script>
+<script src="./shelf-portable.js" defer></script>
 <script src="./webos.js" defer></script>
 </head><body>
 <a class="skip" href="#desktop">Skip to desktop</a>
@@ -27,6 +28,14 @@
 <button type="button" data-open="catalog"><span aria-hidden="true">✦</span><strong>App Catalog</strong></button>
 <button type="button" data-open="about"><span aria-hidden="true">Φ</span><strong>About</strong></button>
 </nav>
+<section class="app-shelf" id="app-shelf" aria-labelledby="shelf-title">
+  <div class="shelf-heading"><div><p class="shelf-kicker">UNIVERSAL PHIOS SHELL · R2</p><h2 id="shelf-title">My App Shelf</h2></div>
+    <div class="shelf-actions"><button type="button" class="btn" data-shelf-action="export">EXPORT</button><button type="button" class="btn" data-shelf-action="import">IMPORT</button></div>
+  </div>
+  <p id="shelf-status" class="shelf-status" role="status" aria-live="polite">Local source bookmarks only. No apps installed.</p>
+  <div id="shelf-list" class="shelf-list" role="list" aria-label="Pinned public projects"></div>
+  <button class="shelf-browse btn" type="button" data-open="catalog">+ Browse 225 public sources</button>
+</section>
 <div id="windows" class="windows" aria-live="off"></div>
 </main>
 <footer class="taskbar"><button id="appMenu" class="launcher" type="button" aria-label="Open applications menu" aria-expanded="false">Φ <span>APPS</span></button>
@@ -42,6 +51,7 @@
 <button type="button" role="menuitem" data-open="about">Φ System Information</button>
 </div>
 <input type="file" id="importFile" accept=".json,application/json" hidden aria-label="Choose local PhiOS Web backup JSON">
+<input type="file" id="shelfImportFile" accept=".json,application/json" hidden aria-label="Choose portable PhiOS App Shelf JSON">
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 </div>
 <noscript><div class="noscript">PhiOS Web requires JavaScript for its local workspace. <a href="../">Return to the gateway</a>.</div></noscript>
