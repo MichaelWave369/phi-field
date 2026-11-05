@@ -70,9 +70,17 @@
     return {docs,prefs:{alias:p.alias,effects:p.effects},events};
   }
   function fileById(id){return state.docs.find(d=>d.id===id);}
-  function uniqueName(base){let name=cleanName(base)||'Untitled.txt';const suffix=name.match(/(\.[^.]+)$/)?.[1]||'';let i=2;
+  function uniqueName(base){
+    const seed=cleanName(base)||'Untitled.txt';let name=seed;
+    const suffix=seed.match(/(\.[^.]+)$/)?.[1]||'';
+    const stem=suffix?seed.slice(0,-suffix.length):seed;
+    let i=2;
     const used=n=>state.docs.some(d=>d.name.toLowerCase()===n.toLowerCase());
-    while(used(name)){name=cleanName(base.replace(/\.[^.]+$/,'')+'-'+i+suffix);i++;}return name;
+    while(used(name)){
+      const postfix='-'+i++;
+      name=stem.slice(0,Math.max(1,80-suffix.length-postfix.length))+postfix+suffix;
+    }
+    return name;
   }
   function createDoc(name='Untitled.txt',text=''){
     if(state.docs.length>=FILE_COUNT){notify('100-file limit reached. Export or delete first.');return null;}
