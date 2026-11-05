@@ -83,6 +83,7 @@ def check_desktop(browser,base):
     assert shelf_backup["version"]==1
     assert len(shelf_backup["pinned"])==1
     page.reload(wait_until="networkidle")
+    page.locator('.window[data-app="about"] [data-control="close"]').click()
     assert page.locator('#shelf-list .shelf-entry').count()==1,"Source pin did not survive reload"
     page.locator('#shelfImportFile').set_input_files({"name":"malicious.json","mimeType":"application/json",
         "buffer":json.dumps(dict(shelf_backup,install_authority=True)).encode("utf-8")})
