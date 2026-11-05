@@ -1,0 +1,261 @@
+/* PhiOS Web Alpha R1. An intentionally unprivileged, local-only browser workspace.
+   No backend, remote scripts, eval, native OS access, permission bridge or silent sync. */
+(() => {
+  'use strict';
+  const APPS = Object.freeze({
+    files:{title:'File Manager',glyph:'▤'},notes:{title:'Notes Editor',glyph:'✎'},
+    terminal:{title:'Safe Console',glyph:'⌘'},ledger:{title:'Local Activity Ledger',glyph:'◇'},
+    settings:{title:'Settings & Backup',glyph:'⚙'},about:{title:'About PhiOS Web',glyph:'Φ'}
+  });
+  const STORE = 'phi-web-r1';
+  const FILE_LIMIT = 50000, FILE_COUNT = 100, IMPORT_LIMIT = 512000, LEDGER_LIMIT = 80;
+  const $ = (sel,ctx=document) => ctx.querySelector(sel);
+  const windows = new Map();
+  const state = {db:null,storage:'starting',docs:[],prefs:{alias:'Field Explorer',effects:true},events:[],
+    activeDoc:null,front:10,term:['PhiOS WEB ALPHA 0.1  ·  UNPRIVILEGED CONSOLE','Type help for supported commands. No host shell access.']};
+  const randomId = () => globalThis.crypto?.randomUUID?.() ?? 'doc-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);
+  const initialDoc = () => ({id:randomId(),name:'WELCOME.txt',text:
+    'Welcome to PhiOS Web Alpha.\n\nThis is a real browser workspace.\nCreate files and notes, use the safe console, inspect the local activity history, and export your data.\n\nAll content stays in this browser unless you explicitly export it.\nThe browser edition does NOT run the Linux OS, access your PC, run arbitrary commands, or connect to a private PhiOS service.\n\nCapability is not authority.'});
+  const cleanName = value => String(value||'').trim().replace(/[\\/<>:"|?*\u0000-\u001f]/g,'_').slice(0,80);
+  function notify(message){const e=$('#toast');e.textContent=message;clearTimeout(notify.timer);notify.timer=setTimeout(()=>e.textContent='',4600);}
+  function updateBadge(){const badge=$('#storageBadge');const persistent=state.storage==='indexeddb';badge.classList.toggle('session',!persistent);badge.textContent=persistent?'LOCAL STORAGE · READY':'SESSION ONLY · EXPORT DATA';}
+  function stamp(){return new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
+  function updateClock(){$('#clock').textContent=stamp();}
+  function eventLog(action){state.events.unshift({at:new Date().toISOString(),action:String(action).slice(0,160)});state.events=state.events.slice(0,LEDGER_LIMIT);}
+  function kvOpen(){
+    return new Promise((resolve,reject)=>{
+      if(!('indexedDB' in window))return reject(Error('IndexedDB unavailable'));
+      const req=indexedDB.open(STORE,1);
+      req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains('records'))req.result.createObjectStore('records');};
+      req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||Error('Cannot open IndexedDB'));
+      req.onblocked=()=>reject(Error('Storage upgrade blocked'));
+    });
+  }
+  function kvGet(db,key){return new Promise((resolve,reject)=>{
+    const tx=db.transaction('records','readonly'),req=tx.objectStore('records').get(key);
+    req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||Error('Read failed'));
+  });}
+  function kvPut(db,key,value){return new Promise((resolve,reject)=>{
+    const tx=db.transaction('records','readwrite');tx.objectStore('records').put(value,key);
+    tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error||Error('Write failed'));
+  });}
+  function backupState(){return {format:'phios-web-alpha',version:1,exportedAt:new Date().toISOString(),
+    docs:state.docs.map(({id,name,text})=>({id,name,text})),
+    prefs:{alias:state.prefs.alias,effects:state.prefs.effects},
+    events:state.events.slice(0,LEDGER_LIMIT)};}
+  function persist(){
+    if(!state.db)return;
+    // Snapshot is written only to this origin's browser database.
+    kvPut(state.db,'workspace',backupState()).catch(()=>{
+      state.storage='session';state.db=null;updateBadge();notify('Local storage failed. Export data to keep a copy.');
+    });
+  }
+  function validateBackup(input){
+    if(!input||typeof input!=='object'||Array.isArray(input)||input.format!=='phios-web-alpha'||input.version!==1)throw Error('Not a PhiOS Web Alpha backup');
+    if(!Array.isArray(input.docs)||input.docs.length>FILE_COUNT)throw Error('Invalid file count');
+    const ids=new Set(),names=new Set();
+    const docs=input.docs.map(d=>{
+      if(!d||typeof d!=='object'||typeof d.id!=='string'||d.id.length>110||
+         typeof d.name!=='string'||!d.name.trim()||d.name!==cleanName(d.name)||typeof d.text!=='string'||d.text.length>FILE_LIMIT)throw Error('Invalid file');
+      if(ids.has(d.id)||names.has(d.name.toLowerCase()))throw Error('Duplicate file');
+      ids.add(d.id);names.add(d.name.toLowerCase());return {id:d.id,name:d.name,text:d.text};
+    });
+    const p=input.prefs;
+    if(!p||typeof p!=='object'||typeof p.alias!=='string'||p.alias.length>40||typeof p.effects!=='boolean')throw Error('Invalid settings');
+    if(!Array.isArray(input.events)||input.events.length>LEDGER_LIMIT)throw Error('Invalid ledger');
+    const events=input.events.map(e=>{
+      if(!e||typeof e!=='object'||typeof e.at!=='string'||!Number.isFinite(Date.parse(e.at))||typeof e.action!=='string'||e.action.length>160)throw Error('Invalid ledger entry');
+      return {at:e.at,action:e.action};
+    });
+    return {docs,prefs:{alias:p.alias,effects:p.effects},events};
+  }
+  function fileById(id){return state.docs.find(d=>d.id===id);}
+  function uniqueName(base){let name=cleanName(base)||'Untitled.txt';const suffix=name.match(/(\.[^.]+)$/)?.[1]||'';let i=2;
+    const used=n=>state.docs.some(d=>d.name.toLowerCase()===n.toLowerCase());
+    while(used(name)){name=cleanName(base.replace(/\.[^.]+$/,'')+'-'+i+suffix);i++;}return name;
+  }
+  function createDoc(name='Untitled.txt',text=''){
+    if(state.docs.length>=FILE_COUNT){notify('100-file limit reached. Export or delete first.');return null;}
+    const d={id:randomId(),name:uniqueName(name),text};state.docs.push(d);state.activeDoc=d.id;
+    eventLog('Created local file: '+d.name);persist();refresh('files');return d;
+  }
+  function renderApp(app,body){
+    body.replaceChildren();
+    if(app==='files')return renderFiles(body);
+    if(app==='notes')return renderNotes(body);
+    if(app==='terminal')return renderTerminal(body);
+    if(app==='ledger')return renderLedger(body);
+    if(app==='settings')return renderSettings(body);
+    return renderAbout(body);
+  }
+  function shell(body,markup){body.innerHTML=markup;}
+  function renderFiles(body){
+    shell(body,'<div class="toolbar"><button class="btn primary" data-action="new-file">+ NEW TEXT FILE</button><button class="btn" data-action="export">EXPORT BACKUP</button></div><p class="help">Virtual text files are stored on this browser origin only. No access to your real device filesystem.</p><div class="files-list"></div>');
+    const list=$('.files-list',body);
+    for(const d of state.docs){
+      const row=document.createElement('div');row.className='file-row';
+      const open=document.createElement('button');open.type='button';open.dataset.action='edit-file';open.dataset.file=d.id;open.textContent='▤  '+d.name;
+      const meta=document.createElement('small');meta.textContent=d.text.length+' chars';
+      const del=document.createElement('button');del.type='button';del.className='remove';del.dataset.action='delete-file';del.dataset.file=d.id;del.textContent='Delete';del.setAttribute('aria-label','Delete '+d.name);
+      row.append(open,meta,del);list.append(row);
+    }
+  }
+  function renderNotes(body){
+    const doc=fileById(state.activeDoc)||state.docs[0];
+    if(!doc){shell(body,'<p>No notes yet.</p><button class="btn primary" data-action="new-file">CREATE A FILE</button>');return;}
+    state.activeDoc=doc.id;
+    shell(body,'<div class="toolbar"><span class="muted" id="editName"></span><button class="btn" data-action="new-file">+ NEW</button><button class="btn" data-action="export">BACKUP</button></div><textarea class="editor" id="editor" aria-label="Text file contents" spellcheck="false" maxlength="50000"></textarea><div class="status-message" id="editStatus">Saves automatically to local browser storage.</div>');
+    $('#editName',body).textContent='▤  '+doc.name;
+    const editor=$('#editor',body);editor.value=doc.text;
+    editor.addEventListener('input',()=>{doc.text=editor.value;clearTimeout(renderNotes.saveTimer);renderNotes.saveTimer=setTimeout(()=>{persist();const message=$('#editStatus',body);if(message)message.textContent=state.db?'Saved locally':'Session only: export to preserve changes';},320);});
+  }
+  function renderTerminal(body){
+    shell(body,'<h2>Safe Console</h2><p class="help">A tiny browser command interpreter. Commands are handled as data; they never reach your machine shell.</p><div class="terminal" role="log" aria-label="Console output"></div><label class="cmdline">Φ &gt; <input id="command" maxlength="150" spellcheck="false" autocomplete="off" aria-label="Console command"></label>');
+    $('.terminal',body).textContent=state.term.slice(-80).join('\n');
+    const input=$('#command',body);input.addEventListener('keydown',ev=>{
+      if(ev.key!=='Enter')return;ev.preventDefault();const command=input.value.trim();input.value='';if(command)runCommand(command,body);
+    });
+  }
+  function runCommand(command,body){
+    const [cmd,...parts]=command.split(/\s+/),arg=parts.join(' ');
+    if(cmd==='clear'){state.term=[];renderTerminal(body);$('#command',body)?.focus();return;}
+    let output='';
+    switch(cmd.toLowerCase()){
+      case 'help':output='help | ls | cat FILE | open APP | date | whoami | status | version | clear';break;
+      case 'ls':output=state.docs.map(d=>d.name).join('\n')||'(no local files)';break;
+      case 'cat':{const doc=state.docs.find(d=>d.name.toLowerCase()===arg.toLowerCase());output=doc?doc.text.slice(0,2000):'File not found';break;}
+      case 'whoami':output=state.prefs.alias+' (local display name; not an authenticated identity)';break;
+      case 'date':output=new Date().toString();break;
+      case 'version':output='PhiOS Web Alpha 0.1 · browser edition';break;
+      case 'status':output='Runtime: browser-only | Storage: '+state.storage+' | Native access: NONE | Remote bridge: NOT CONNECTED';break;
+      case 'open':if(APPS[arg.toLowerCase()]){openWindow(arg.toLowerCase());output='Opened '+arg.toLowerCase();}else output='Unknown app';break;
+      default:output='Unsupported command. Type help. No host shell or code execution is available.';
+    }
+    state.term.push('Φ > '+command,output);state.term=state.term.slice(-80);
+    const log=$('.terminal',body);if(log){log.textContent=state.term.join('\n');log.scrollTop=log.scrollHeight;}
+  }
+  function renderLedger(body){
+    shell(body,'<h2>Local Activity Ledger</h2><p class="notice">This is a user-controlled local activity history, NOT a cryptographically verified PhiOS Reality Ledger, proof of provenance, or authorization receipt.</p><div class="toolbar"><button class="btn" data-action="export">EXPORT WORKSPACE</button><button class="btn danger" data-action="clear-ledger">CLEAR HISTORY</button></div><ol class="ledger-list"></ol>');
+    const list=$('.ledger-list',body);
+    for(const e of state.events){const row=document.createElement('li'),time=document.createElement('time'),msg=document.createElement('span');time.textContent=new Date(e.at).toLocaleString();msg.textContent=e.action;row.append(time,msg);list.append(row);}
+  }
+  function renderSettings(body){
+    shell(body,'<h2>Settings & Sovereignty</h2><p class="help">Your files stay under this website\'s browser storage. Clearing site data or private browsing may erase them. Export regularly.</p><label class="label">LOCAL CALLSIGN <input class="field" id="alias" maxlength="40" autocomplete="off"></label><div class="setting"><input type="checkbox" id="effects"><label for="effects">Enable cosmetic space effects</label></div><div class="toolbar"><button class="btn primary" data-action="save-prefs">SAVE PREFERENCES</button></div><h3>Data portability</h3><div class="toolbar"><button class="btn" data-action="export">EXPORT JSON</button><button class="btn" data-action="import">IMPORT JSON</button><button class="btn danger" data-action="wipe">RESET LOCAL WORKSPACE</button></div><p class="notice">Imports replace this browser workspace only after confirmation. Exported JSON is unencrypted and may contain private notes. No account or cross-site syncing exists.</p><p class="status-message">Storage: <span id="storageState"></span></p>');
+    $('#alias',body).value=state.prefs.alias;$('#effects',body).checked=state.prefs.effects;
+    $('#storageState',body).textContent=state.storage==='indexeddb'?'IndexedDB on this browser origin':'Session only (storage unavailable)';
+  }
+  function renderAbout(body){
+    shell(body,'<h2>Φ PhiOS Web Alpha 0.1</h2><p>A genuine unprivileged browser workspace built as the first PhiOS web rung.</p><div class="checks"><div class="check"><b>WORKING NOW</b>Files, notes, window management, local IndexedDB, portable JSON, safe commands, offline app shell.</div><div class="check"><b>NOT PRESENT</b>Linux boot, PC filesystem, native installs, local models, agent execution, remote bridge.</div><div class="check"><b>LOCAL AUTHORITY</b>Only explicit user interactions inside this webpage. No background agent or privileged operation.</div><div class="check"><b>OPEN DEVELOPMENT</b>Alpha software. Local history does not qualify as independent audit evidence.</div></div><p class="notice">Capability ≠ Authority. A working interface does not grant access to your computer or your private PhiOS runtime.</p><div class="toolbar"><a class="btn" href="https://github.com/MichaelWave369/PhiOS" target="_blank" rel="noopener noreferrer">PHIOS SOURCE ↗</a><a class="btn" href="../">RETURN TO GATEWAY ↗</a></div>');
+  }
+  function refresh(app){const win=windows.get(app);if(win)renderApp(app,$('.window-body',win));}
+  function drawDock(){const dock=$('#dock');dock.replaceChildren();for(const [id,win] of windows){
+    const btn=document.createElement('button');btn.type='button';btn.textContent=APPS[id].glyph+' '+APPS[id].title;btn.dataset.open=id;btn.classList.toggle('active',!win.hidden);dock.append(btn);
+  }}
+  function focusWindow(win){state.front++;win.style.zIndex=String(state.front);if(win.hidden)win.hidden=false;drawDock();}
+  function openWindow(app){
+    if(!APPS[app])return;let win=windows.get(app);
+    if(win){focusWindow(win);return;}
+    win=document.createElement('section');win.className='window';win.dataset.app=app;win.setAttribute('role','dialog');win.setAttribute('aria-label',APPS[app].title);
+    const offset=windows.size%5;win.style.setProperty('--x',Math.min(20,8+offset*3)+'%');win.style.setProperty('--y',Math.min(18,7+offset*2)+'%');
+    win.innerHTML='<div class="windowbar"><small>Φ</small><strong></strong><button type="button" class="win-control" data-control="min" aria-label="Minimize window">−</button><button type="button" class="win-control" data-control="max" aria-label="Maximize window">□</button><button type="button" class="win-control" data-control="close" aria-label="Close window">×</button></div><div class="window-body"></div>';
+    $('.windowbar strong',win).textContent=APPS[app].title;windows.set(app,win);$('#windows').append(win);focusWindow(win);
+    renderApp(app,$('.window-body',win));eventLog('Opened '+APPS[app].title);persist();
+  }
+  function closeMenu(){$('#menu').hidden=true;$('#appMenu').setAttribute('aria-expanded','false');}
+  function bindDrag(){
+    let drag=null;
+    document.addEventListener('pointerdown',ev=>{
+      const bar=ev.target.closest('.windowbar');if(!bar||ev.target.closest('button'))return;
+      const win=bar.closest('.window');if(win.classList.contains('maximized'))return;
+      focusWindow(win);const rect=win.getBoundingClientRect();
+      drag={bar,win,id:ev.pointerId,x:ev.clientX-rect.left,y:ev.clientY-rect.top};
+      bar.setPointerCapture(ev.pointerId);
+    });
+    document.addEventListener('pointermove',ev=>{
+      if(!drag||drag.id!==ev.pointerId)return;
+      const parent=$('#desktop').getBoundingClientRect(),width=drag.win.getBoundingClientRect().width;
+      drag.win.style.left=Math.max(0,Math.min(parent.width-width,ev.clientX-parent.left-drag.x))+'px';
+      drag.win.style.top=Math.max(0,Math.min(parent.height-68,ev.clientY-parent.top-drag.y))+'px';
+    });
+    const stop=ev=>{if(drag&&drag.id===ev.pointerId)drag=null;};
+    document.addEventListener('pointerup',stop);document.addEventListener('pointercancel',stop);
+  }
+  async function exportData(){
+    const blob=new Blob([JSON.stringify(backupState(),null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='phios-web-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+    eventLog('Exported workspace backup');persist();notify('Backup exported as plaintext JSON. Store it safely.');
+  }
+  async function importData(file){
+    if(!file)return;
+    if(file.size>IMPORT_LIMIT){notify('Import rejected: 512 KB limit');return;}
+    let data;
+    try{data=validateBackup(JSON.parse(await file.text()));}catch(e){notify('Import rejected: '+e.message);return;}
+    if(!window.confirm('Replace this browser workspace with '+data.docs.length+' imported files? Export first if needed.'))return;
+    state.docs=data.docs;state.prefs=data.prefs;state.events=data.events;state.activeDoc=state.docs[0]?.id??null;
+    eventLog('Imported user-selected workspace');persist();applyEffects();for(const key of windows.keys())refresh(key);notify('Workspace imported locally.');
+  }
+  function applyEffects(){document.body.dataset.noEffects=String(!state.prefs.effects);}
+  function actions(){
+    document.addEventListener('click',ev=>{
+      const open=ev.target.closest('[data-open]');if(open){openWindow(open.dataset.open);closeMenu();return;}
+      const control=ev.target.closest('[data-control]');if(control){
+        const win=control.closest('.window'),id=win?.dataset.app;if(!win)return;
+        const action=control.dataset.control;
+        if(action==='close'){win.remove();windows.delete(id);drawDock();}
+        else if(action==='min'){win.hidden=true;drawDock();}
+        else if(action==='max'){win.classList.toggle('maximized');focusWindow(win);}
+        return;
+      }
+      const action=ev.target.closest('[data-action]');if(!action)return;
+      const key=action.dataset.action;
+      if(key==='new-file'){
+        const value=window.prompt('New text file name (up to 80 characters)','Untitled.txt');
+        if(value!==null){const d=createDoc(value);if(d)openWindow('notes'),refresh('notes');}
+      }else if(key==='edit-file'){state.activeDoc=action.dataset.file;openWindow('notes');refresh('notes');}
+      else if(key==='delete-file'){
+        const doc=fileById(action.dataset.file);
+        if(doc&&window.confirm('Delete local file "'+doc.name+'"? This cannot be undone.')){
+          state.docs=state.docs.filter(d=>d.id!==doc.id);if(state.activeDoc===doc.id)state.activeDoc=state.docs[0]?.id??null;
+          eventLog('Deleted local file: '+doc.name);persist();refresh('files');refresh('notes');
+        }
+      }else if(key==='save-prefs'){
+        const panel=action.closest('.window-body'),alias=$('#alias',panel).value.trim();
+        state.prefs={alias:alias.slice(0,40)||'Field Explorer',effects:$('#effects',panel).checked};
+        applyEffects();eventLog('Changed local preferences');persist();notify('Local preferences saved.');
+      }else if(key==='export'){exportData();}
+      else if(key==='import'){$('#importFile').click();}
+      else if(key==='clear-ledger'){
+        if(window.confirm('Clear this local unverified activity history?')){state.events=[];persist();refresh('ledger');}
+      }else if(key==='wipe'){
+        if(window.confirm('Erase all files, notes, preferences and history on THIS browser origin? Export first.')){
+          state.docs=[initialDoc()];state.activeDoc=state.docs[0].id;state.prefs={alias:'Field Explorer',effects:true};state.events=[];
+          eventLog('Reset local workspace');applyEffects();persist();for(const app of windows.keys())refresh(app);notify('Local workspace reset.');
+        }
+      }
+    });
+    const menu=$('#menu'),button=$('#appMenu');
+    button.addEventListener('click',()=>{menu.hidden=!menu.hidden;button.setAttribute('aria-expanded',String(!menu.hidden));});
+    document.addEventListener('keydown',ev=>{if(ev.key==='Escape'){closeMenu();const front=[...windows.values()].filter(w=>!w.hidden).sort((a,b)=>(+b.style.zIndex)-(+a.style.zIndex))[0];if(front)front.hidden=true,drawDock();}});
+    $('#importFile').addEventListener('change',async ev=>{await importData(ev.target.files?.[0]);ev.target.value='';});
+    bindDrag();
+  }
+  async function boot(){
+    actions();updateClock();setInterval(updateClock,60000);
+    try{
+      state.db=await kvOpen();state.storage='indexeddb';
+      const saved=await kvGet(state.db,'workspace');
+      if(saved){const safe=validateBackup(saved);state.docs=safe.docs;state.prefs=safe.prefs;state.events=safe.events;}
+      else{state.docs=[initialDoc()];state.activeDoc=state.docs[0].id;}
+    }catch(error){
+      state.storage='session';state.db=null;state.docs=[initialDoc()];notify('Browser storage is unavailable. Use Export to save your work.');
+    }
+    if(!state.docs.length)state.docs=[initialDoc()];
+    state.activeDoc=state.docs[0].id;
+    applyEffects();updateBadge();eventLog('Browser session started: no native permissions');persist();
+    if('serviceWorker' in navigator && location.protocol==='https:'){
+      navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(()=>{/* Optional offline shell registration */});
+    }
+    openWindow('about');
+  }
+  boot();
+})();
