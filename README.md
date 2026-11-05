@@ -8,13 +8,13 @@ Official web gateway for [phi-field.com](https://phi-field.com). One field, thre
 
 | Choice | Current web experience | Notes |
 | --- | --- | --- |
-| PhiOS Live | https://michaelwave369.github.io/PhiOS/ | Public browser showcase, not a Linux OS install |
+| PhiOS Live | ./os/ (same origin) | Local-first browser desktop (Alpha R1), not a Linux OS install |
 | PhiOS XR | https://michaelwave369.github.io/PhiOS-XR/ | Browser 3D and optional compatible headset WebXR |
 | PhiOS Mobile | https://michaelwave369.github.io/PhiOS-Mobile/ | Touch-first browser/PWA preview, not a replacement Android ROM |
 
 These are real `<a>` links. No account, tracker, JavaScript framework, network API, cookies, or privileged OS integration is required. Ambient motion is cosmetic only and can be disabled; `prefers-reduced-motion` is honored. Rung 2 adds reactive portal effects, optional short desktop transitions, and arrow-key selection; headset/touch and reduced-motion links navigate natively.
 
-## Cost-conscious workflow
+**PhiOS Web R1:** the Live card now boots the working static application at \`/os/\`. The separate [PhiOS public architecture site](https://michaelwave369.github.io/PhiOS/) remains available, as does the full [PhiOS source repository](https://github.com/MichaelWave369/PhiOS). The browser desktop is unprivileged and keeps its data in same-origin IndexedDB. The production Netlify site remains manual-upload only.\n\n## Cost-conscious workflow
 
 **Production stays untouched while developing.** This repository is the source of truth. Preview and test locally or with GitHub Actions first. Connect Netlify's Git-based continuous deployment **only when the release is approved**, because enabling it may trigger builds on future pushes and PRs. To limit deploy/credit usage, consider keeping production publishing manual, or configure Netlify builds only on a deliberate `release` branch and commit only after review.
 
