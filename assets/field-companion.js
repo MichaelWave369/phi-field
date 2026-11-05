@@ -19,7 +19,7 @@
   const FORMAT = 'phi-field-companion';
   const MAX_FILE_BYTES = 16 * 1024;
   const ROUTES = Object.freeze({
-    live: Object.freeze({name:'PhiOS Live', url:'https://michaelwave369.github.io/PhiOS/'}),
+    live: Object.freeze({name:'PhiOS Live', url:'./os/'}),
     xr: Object.freeze({name:'PhiOS XR', url:'https://michaelwave369.github.io/PhiOS-XR/'}),
     mobile: Object.freeze({name:'PhiOS Mobile', url:'https://michaelwave369.github.io/PhiOS-Mobile/'})
   });
