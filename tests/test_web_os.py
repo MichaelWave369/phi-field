@@ -73,8 +73,8 @@ class WebOSContracts(unittest.TestCase):
         for name in ('os/index.html', 'os/styles.css', 'os/webos.js', 'os/sw.js'):
             self.assertIn(name, pack)
         gateway = (ROOT / 'index.html').read_text(encoding='utf-8')
-        self.assertIn('https://michaelwave369.github.io/PhiOS/', gateway)
-        self.assertNotIn('href="os/', gateway)
+        self.assertIn('href="./os/" data-destination="live"', gateway)
+        self.assertIn('href="./os/"', gateway)
 
 if __name__ == '__main__':
     unittest.main()
