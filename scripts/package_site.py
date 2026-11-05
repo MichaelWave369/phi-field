@@ -5,6 +5,10 @@ from zipfile import ZipFile, ZIP_DEFLATED
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / 'dist'
 ASSETS = ('assets/styles.css', 'assets/app.js', 'assets/world.js', 'assets/field-companion.js', 'assets/field-companion.css')
+OS_FILES = (
+    'os/index.html', 'os/styles.css', 'os/webos.js', 'os/sw.js',
+    'os/manifest.webmanifest', 'os/icon.svg', 'os/README.md',
+)
 ROOT_FILES = (
     'index.html', 'favicon.svg', 'site.webmanifest', 'robots.txt',
     'sitemap.xml', 'netlify.toml', 'phi-field-desktop-ui-ready.webp',
@@ -15,7 +19,7 @@ ROOT_FILES = (
 def main():
     if OUTPUT.exists():
         rmtree(OUTPUT)
-    for name in (*ROOT_FILES, *ASSETS):
+    for name in (*ROOT_FILES, *ASSETS, *OS_FILES):
         source = ROOT / name
         if not source.is_file():
             raise SystemExit(f'Missing required release asset: {name}')
@@ -30,7 +34,7 @@ def main():
         for path in sorted(OUTPUT.rglob('*')):
             if path.is_file():
                 zipped.write(path, path.relative_to(OUTPUT))
-    print(f'Prepared {archive.name}: {archive.stat().st_size:,} bytes, {len(ROOT_FILES) + len(ASSETS)} files')
+    print(f'Prepared {archive.name}: {archive.stat().st_size:,} bytes, {len(ROOT_FILES) + len(ASSETS) + len(OS_FILES)} files')
 
 
 if __name__ == '__main__':

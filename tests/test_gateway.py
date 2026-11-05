@@ -24,7 +24,7 @@ class GatewaySmokeTests(unittest.TestCase):
     def test_three_destinations(self):
         launch={a.get('data-destination'):a.get('href') for a in self.parser.links if a.get('data-destination')}
         self.assertEqual(launch,{
-            'live':'https://michaelwave369.github.io/PhiOS/',
+            'live':'./os/',
             'xr':'https://michaelwave369.github.io/PhiOS-XR/',
             'mobile':'https://michaelwave369.github.io/PhiOS-Mobile/',
         })

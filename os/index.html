@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07101e"><meta name="description" content="PhiOS Web Alpha: a local-first browser workspace with files, notes, an offline shell and user-controlled backup.">
+<title>Φ PhiOS Web · Browser Boot Alpha</title>
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="stylesheet" href="./styles.css">
+<script src="./webos.js" defer></script>
+</head><body>
+<a class="skip" href="#desktop">Skip to desktop</a>
+<div class="system" id="system">
+<header class="menubar"><a class="home" href="../" aria-label="Back to Phi Field gateway">Φ <span>PHIOS WEB</span></a>
+<span class="alpha">ALPHA 0.1 · BROWSER EDITION</span><span id="storageBadge" class="storage" aria-live="polite">INITIALIZING STORAGE</span>
+<span id="clock" class="clock" aria-label="Local device clock"></span></header>
+<main id="desktop" class="desktop">
+<div class="stars" aria-hidden="true"></div><div class="portal" aria-hidden="true">Φ</div>
+<section class="welcome"><div class="kicker">WELCOME TO THE FIELD</div><h1>YOUR WORLD.<br><em>YOUR DEVICE.</em></h1>
+<p>A real local browser workspace. No account. No invisible machine access.</p></section>
+<nav class="launchers" aria-label="Desktop apps">
+<button type="button" data-open="files"><span aria-hidden="true">▤</span><strong>Files</strong></button>
+<button type="button" data-open="notes"><span aria-hidden="true">✎</span><strong>Notes</strong></button>
+<button type="button" data-open="terminal"><span aria-hidden="true">⌘</span><strong>Console</strong></button>
+<button type="button" data-open="ledger"><span aria-hidden="true">◇</span><strong>Ledger</strong></button>
+<button type="button" data-open="settings"><span aria-hidden="true">⚙</span><strong>Settings</strong></button>
+<button type="button" data-open="about"><span aria-hidden="true">Φ</span><strong>About</strong></button>
+</nav>
+<div id="windows" class="windows" aria-live="off"></div>
+</main>
+<footer class="taskbar"><button id="appMenu" class="launcher" type="button" aria-label="Open applications menu" aria-expanded="false">Φ <span>APPS</span></button>
+<nav id="dock" class="dock" aria-label="Open windows"></nav><span class="taskbar-note">CAPABILITY ≠ AUTHORITY</span>
+<a href="../" class="exit">EXIT TO FIELD ↗</a></footer>
+<div id="menu" class="start-menu" hidden role="menu" aria-label="Applications">
+<button type="button" role="menuitem" data-open="files">▤ File Manager</button>
+<button type="button" role="menuitem" data-open="notes">✎ Notes Editor</button>
+<button type="button" role="menuitem" data-open="terminal">⌘ Safe Console</button>
+<button type="button" role="menuitem" data-open="ledger">◇ Local Activity Ledger</button>
+<button type="button" role="menuitem" data-open="settings">⚙ Settings & Backup</button>
+<button type="button" role="menuitem" data-open="about">Φ System Information</button>
+</div>
+<input type="file" id="importFile" accept=".json,application/json" hidden aria-label="Choose local PhiOS Web backup JSON">
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+</div>
+<noscript><div class="noscript">PhiOS Web requires JavaScript for its local workspace. <a href="../">Return to the gateway</a>.</div></noscript>
+</body></html>
