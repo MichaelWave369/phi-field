@@ -16,6 +16,10 @@ jobs:
           python-version: '3.12'
       - name: Validate gateway
         run: python -m unittest discover -s tests -v
+      - name: Validate browser desktop syntax
+        run: |
+          node --check os/webos.js
+          node --check os/sw.js
       - name: Assemble static release without unused artwork
         run: python scripts/package_site.py
       - name: Upload ready-to-review Netlify bundle (not a deployment)
