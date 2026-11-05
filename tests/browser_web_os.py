@@ -61,6 +61,17 @@ def check_desktop(browser,base):
     page.once('dialog',lambda d:d.accept())
     page.locator('#importFile').set_input_files({'name':'backup.json','mimeType':'application/json','buffer':json.dumps(contents).encode()})
     expect(page.locator('#toast')).to_contain_text('Workspace imported locally')
+    # Shared catalog is offline, public-source-only and never an installer.
+    page.locator('#appMenu').click()
+    page.locator('#menu [data-open="catalog"]').click()
+    catalog=page.locator('.window[data-app="catalog"]')
+    expect(catalog.locator('#catalog-meta')).to_contain_text('225 / 225 public repositories')
+    assert catalog.locator('.catalog-entry').count()==35
+    catalog.locator('#catalog-search').fill('GenEWrist')
+    expect(catalog.locator('#catalog-meta')).to_contain_text('public repositories')
+    assert catalog.locator('.catalog-entry').count()>=1
+    assert catalog.locator('.catalog-entry a').first.get_attribute('href').startswith('https://github.com/MichaelWave369/')
+    assert catalog.get_by_text('INSTALL',exact=True).count()==0
     page.screenshot(path=str(SHOTS/'phios-web-desktop.png'),full_page=True)
     assert not errors,errors
     context.close()
@@ -72,7 +83,7 @@ def check_phone(browser,base):
     page.on('pageerror',lambda e:errors.append(str(e)))
     response=page.goto(base+'/os/',wait_until='networkidle')
     assert response.status==200
-    assert page.locator('.launchers [data-open]').count()==6
+    assert page.locator('.launchers [data-open]').count()==7
     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1'), 'Horizontal overflow'
     page.locator('#appMenu').click()
     page.locator('#menu [data-open="notes"]').click()
