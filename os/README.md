@@ -15,6 +15,14 @@
 
 Data is **not synchronized** between GitHub Pages and Netlify: each origin has distinct IndexedDB. Export and import a plain JSON backup manually if switching origin. Browser clearing/eviction/private mode can delete data, so regular export is important. Exports are **unencrypted**. No external application or document files are touched.
 
+## Universal Shell R1 public app catalog
+
+The desktop now has a **Public App Catalog** window. It searches the **same 225 public GitHub source identities** as PhiOS Mobile and the PhiOS native interop catalog, sourced from FieldConstellation's dated 2026-11-04 complete-at-snapshot public inventory (source blob `e295f6265e60032de98a2acd8e53295505fc47e8`).
+
+The self-contained release includes the canonical JSON and equivalent local JS data. Both are packaged in the `/os/` service-worker cache. No network fetch, new permissions, external script host or changes to Netlify's root CSP are required. All entries are **SOURCE ONLY**; individual GitHub source pages open only on an explicit click and are not imported or executed. Old metadata can become stale; the count is not guaranteed to reflect repositories created after the snapshot. No private repositories are included.
+
+An actual install requires a platform-specific, qualified app manifest, exact source/artifact and license review, verified runtime adapter and human approval. Browser bookmarking or source discovery is **not** application installation.
+
 ## Test and rollout
 
 The static site packaging includes `os/` in the Netlify-ready ZIP, with `/os/index.html` as the entry point, and supports GitHub Pages under `/phi-field/os/`. The staged release root gateway's **PhiOS Live** button now points to its own `./os/` folder. Nothing changes at the live Netlify site until the owner manually uploads the approved ZIP. The R1 app is also independently launchable.
