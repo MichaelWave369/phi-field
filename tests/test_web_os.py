@@ -123,7 +123,8 @@ class WebOSContracts(unittest.TestCase):
     def test_bundle_copies_webos_but_does_not_repoint_live_gateway(self):
         pack = (ROOT / 'scripts/package_site.py').read_text(encoding='utf-8')
         for name in ('os/index.html', 'os/styles.css', 'os/webos.js', 'os/sw.js',
-                     'os/catalog-data.js', 'os/shelf-portable.js', 'os/public-repo-catalog.v1.json',\n                     'os/app-center-data.js', 'os/app-center-reviews.v1.json'):
+                     'os/catalog-data.js', 'os/shelf-portable.js', 'os/public-repo-catalog.v1.json',
+                     'os/app-center-data.js', 'os/app-center-reviews.v1.json'):
             self.assertIn(name, pack)
         gateway = (ROOT / 'index.html').read_text(encoding='utf-8')
         self.assertIn('href="./os/" data-destination="live"', gateway)
