@@ -5,7 +5,7 @@
   const APPS = Object.freeze({
     files:{title:'File Manager',glyph:'▤'},notes:{title:'Notes Editor',glyph:'✎'},
     terminal:{title:'Safe Console',glyph:'⌘'},ledger:{title:'Local Activity Ledger',glyph:'◇'},
-    settings:{title:'Settings & Backup',glyph:'⚙'},catalog:{title:'Public App Catalog',glyph:'✦'},about:{title:'About PhiOS Web',glyph:'Φ'}
+    settings:{title:'Settings & Backup',glyph:'⚙'},catalog:{title:'Public App Catalog',glyph:'✦'},appcenter:{title:'Reviewed App Center',glyph:'⬡'},about:{title:'About PhiOS Web',glyph:'Φ'}
   });
   const STORE = 'phi-web-r1';
   const FILE_LIMIT = 50000, FILE_COUNT = 100, IMPORT_LIMIT = 512000, LEDGER_LIMIT = 80;
@@ -95,6 +95,7 @@
     if(app==='ledger')return renderLedger(body);
     if(app==='settings')return renderSettings(body);
     if(app==='catalog')return renderCatalog(body);
+    if(app==='appcenter')return renderAppCenter(body);
     return renderAbout(body);
   }
   function shell(body,markup){body.innerHTML=markup;}
@@ -295,6 +296,92 @@
     });
     append();
   }
+  // R4: this first-party candidate was reviewed in a static Chromium CI bundle.
+  // Neither review metadata nor a repository listing grants program execution.
+  let browserInstallPrompt=null;
+  let browserInstalledReported=false;
+  function reviewedWebProfile(){
+    const reviews=window.PHI_REVIEWED_APPS,catalog=window.PHI_PUBLIC_CATALOG;
+    if(!reviews||reviews.schema!=='phios.app-center-reviews.v1'||
+      reviews.catalog_source_sha!==catalog?.provenance?.source_blob_sha||
+      reviews.policy?.source_listing_is_not_installation!==true||
+      reviews.policy?.autonomous_installs!==false||reviews.policy?.native_install_grants!==false||
+      reviews.policy?.user_gesture_required!==true||reviews.policy?.browser_controls_pwa_install!==true||
+      !Array.isArray(reviews.reviewed_web_apps)||reviews.reviewed_web_apps.length!==1)return null;
+    const app=reviews.reviewed_web_apps[0];
+    const source=catalog.apps?.find(x=>x.id==='github:1442243366');
+    if(!source||source.name!=='phi-field'||
+      source.repository!=='https://github.com/MichaelWave369/phi-field'||
+      app?.app_id!==source.id||app.name!=='PhiOS Web'||app.repository!==source.repository||
+      app.runtime!=='browser_pwa'||app.review_status!=='ci_reviewed_browser_app'||
+      app.launch_url!=='https://phi-field.com/os/'||app.scope_path!=='/os/'||
+      app.evidence?.repository!=='MichaelWave369/phi-field'||
+      app.evidence?.test_path!=='tests/browser_web_os.py'||app.evidence?.source_pr!==8||
+      app.evidence?.evidence_scope!=='static_build_and_chromium_ci'||
+      app.evidence?.live_endpoint_independently_verified!==false||
+      app.actions?.open!=='explicit_navigation'||
+      app.actions?.install!=='browser_mediated_if_available'||
+      app.actions?.native_install!==false||app.actions?.automatic_execution!==false)return null;
+    return app;
+  }
+  function renderAppCenter(body){
+    const profile=reviewedWebProfile();
+    if(!profile){
+      shell(body,'<h2>Reviewed App Center</h2><p class="notice">The reviewed-app registry is unavailable or invalid. No installs or app launches were authorized.</p>');
+      return;
+    }
+    shell(body,'<h2>⬡ Reviewed App Center</h2><p class="help">First qualified rung: a genuine browser PWA candidate with passing source/Chromium CI. This is not a license to install GitHub repositories or run native operating-system commands.</p><div class="reviewed-app"></div><h3>Other projects</h3><p class="muted">The remaining 224 public sources are discoverable in App Catalog, but not independently qualified for install or launch.</p><button type="button" class="btn" data-open="catalog">BROWSE SOURCE CATALOG</button>');
+    const card=$('.reviewed-app',body);
+    const heading=document.createElement('h3');heading.textContent=profile.name;
+    const badge=document.createElement('small');badge.textContent='CI-REVIEWED WEB PWA · PRODUCTION ENDPOINT NOT INDEPENDENTLY VERIFIED';
+    const desc=document.createElement('p');desc.textContent=profile.disclosure;
+    const note=document.createElement('p');note.className='help';
+    note.textContent='Evidence: '+profile.evidence.repository+' PR #'+profile.evidence.source_pr+' Chromium acceptance. PWA installability depends on this browser.';
+    const row=document.createElement('div');row.className='toolbar';
+    const open=document.createElement('a');open.className='btn primary';open.href='./';open.target='_blank';open.rel='noopener noreferrer';open.textContent='OPEN PHIOS WEB ↗';open.setAttribute('aria-label','Open PhiOS Web in a new browser tab');
+    const source=document.createElement('a');source.className='btn';source.href=profile.repository;source.target='_blank';source.rel='noopener noreferrer';source.textContent='VIEW REVIEWED SOURCE ↗';
+    const install=document.createElement('button');install.className='btn';install.type='button';install.dataset.action='pwa-install';
+    install.textContent=browserInstalledReported?'INSTALLED (BROWSER REPORTED)':browserInstallPrompt?'INSTALL WITH BROWSER':'INSTALL IN BROWSER MENU';
+    if(browserInstalledReported)install.disabled=true;
+    const message=document.createElement('p');message.id='install-help';message.className='status-message';message.setAttribute('role','status');
+    message.textContent=browserInstalledReported?'The browser reported successful PWA installation.':
+      browserInstallPrompt?'The browser offers an installation prompt. Installation still requires your approval.':
+      'Use the browser menu or address-bar Install option when available. Some browsers do not provide a custom installation prompt.';
+    row.append(open,install,source);card.append(heading,badge,desc,note,row,message);
+  }
+  function installBrowserApp(){
+    const profile=reviewedWebProfile();
+    if(!profile)return;
+    if(!browserInstallPrompt){
+      const help=$('#install-help');
+      if(help)help.textContent='No browser-managed prompt is available. Check your browser menu for Install app or Add to Home Screen. Nothing was installed.';
+      return;
+    }
+    const pending=browserInstallPrompt;browserInstallPrompt=null;
+    // prompt() is invoked synchronously from the user's button click.
+    try{
+      Promise.resolve(pending.prompt()).then(result=>{
+        const help=$('#install-help');
+        if(help)help.textContent=result?.outcome==='accepted'
+          ?'Browser accepted the installation request. Confirm installation through the browser.'
+          :'Installation was dismissed or not completed by the browser.';
+        refresh('appcenter');
+      }).catch(()=>{notify('Browser installation prompt unavailable. Use browser menu.');refresh('appcenter');});
+    }catch{notify('Browser installation prompt could not open. Use browser menu.');refresh('appcenter');}
+  }
+  function installEvents(){
+    window.addEventListener('beforeinstallprompt',event=>{
+      if(!reviewedWebProfile())return;
+      event.preventDefault();
+      browserInstallPrompt=event;
+      refresh('appcenter');
+    });
+    window.addEventListener('appinstalled',()=>{
+      browserInstallPrompt=null;
+      browserInstalledReported=true;
+      refresh('appcenter');
+    });
+  }
   function renderAbout(body){
     shell(body,'<h2>Φ PhiOS Web Alpha 0.1</h2><p>A genuine unprivileged browser workspace built as the first PhiOS web rung.</p><div class="checks"><div class="check"><b>WORKING NOW</b>Files, notes, window management, local IndexedDB, portable JSON, safe commands, offline app shell.</div><div class="check"><b>NOT PRESENT</b>Linux boot, PC filesystem, native installs, local models, agent execution, remote bridge.</div><div class="check"><b>LOCAL AUTHORITY</b>Only explicit user interactions inside this webpage. No background agent or privileged operation.</div><div class="check"><b>OPEN DEVELOPMENT</b>Alpha software. Local history does not qualify as independent audit evidence.</div></div><p class="notice">Capability ≠ Authority. A working interface does not grant access to your computer or your private PhiOS runtime.</p><div class="toolbar"><a class="btn" href="https://github.com/MichaelWave369/PhiOS" target="_blank" rel="noopener noreferrer">PHIOS SOURCE ↗</a><a class="btn" href="../">RETURN TO GATEWAY ↗</a></div>');
   }
@@ -372,6 +459,7 @@
       }
       const action=ev.target.closest('[data-action]');if(!action)return;
       const key=action.dataset.action;
+      if(key==='pwa-install'){installBrowserApp();return;}
       if(key==='new-file'){
         const value=window.prompt('New text file name (up to 80 characters)','Untitled.txt');
         if(value!==null){const d=createDoc(value);if(d)openWindow('notes'),refresh('notes');}
@@ -405,7 +493,7 @@
     bindDrag();
   }
   async function boot(){
-    actions();updateClock();setInterval(updateClock,60000);
+    actions();installEvents();updateClock();setInterval(updateClock,60000);
     try{
       state.db=await kvOpen();state.storage='indexeddb';
       const saved=await kvGet(state.db,'workspace');
