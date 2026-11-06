@@ -120,6 +120,15 @@ class WebOSContracts(unittest.TestCase):
         wrapped=(OS/'app-center-data.js').read_text(encoding='utf-8')
         self.assertEqual(json.loads(wrapped.split(' = ',1)[1].strip().rstrip(';')),data)
 
+    def test_r5_browser_lifecycle_never_claims_native_uninstall(self):
+        self.assertIn("data.action='pwa-update'", self.js)
+        self.assertIn("data.action='pwa-manage'", self.js)
+        self.assertIn("navigator.serviceWorker.getRegistration('./')", self.js)
+        self.assertIn("await registration.update()", self.js)
+        self.assertIn("display-mode: standalone", self.js)
+        self.assertIn("This page has no uninstall or rollback permission.", self.js)
+        self.assertIn("phios-web-alpha-lifecycle-r5-v5", self.sw)
+
     def test_bundle_copies_webos_but_does_not_repoint_live_gateway(self):
         pack = (ROOT / 'scripts/package_site.py').read_text(encoding='utf-8')
         for name in ('os/index.html', 'os/styles.css', 'os/webos.js', 'os/sw.js',
