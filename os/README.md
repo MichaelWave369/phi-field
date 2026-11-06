@@ -29,6 +29,14 @@ The Web desktop now shows a persistent **App Shelf** beneath the local app short
 
 The portable JavaScript implementation is byte-identical to `PhiOS/interop/shelf-portable.v1.js` and `PhiOS-Mobile/src/shelf-portable.js`. The native PhiOS Python CLI can read the same shelf JSON but is not yet a full PhiShell GUI integration. See the [R2 contract](https://github.com/MichaelWave369/PhiOS/blob/main/docs/PHIOS_UNIVERSAL_SHELL_R2_APP_SHELF.md) after merge. This remains a manual Netlify release.
 
+## Φ Universal App Center R4
+
+The desktop now has a **Reviewed App Center** alongside the source-only catalog. It begins with exactly **one first-party CI-reviewed browser application: PhiOS Web** (`github:1442243366`, same-origin `/os/`). The reviewed profile is pinned in `os/app-center-reviews.v1.json` and has the same bytes as the canonical PhiOS registry. A separate local script validates the exact ID, source, runtime, path, evidence and no-authority flags. The review cites passing Chromium CI, **not independent live production reachability**.
+
+A real PWA installation prompt may be offered in Chromium; the App Center calls it **only after a click**, if the browser offers `beforeinstallprompt`. Otherwise the App Center instructs users to use their browser's installation controls. `appinstalled` events are reported as browser information, not privileged system installation receipts. The source catalog remains **225 sources**, with **224 not reviewed** for launches or installs. The existing Notes, shelf, offline cache and full Netlify static release are preserved.
+
+The R4 frontend is **not** a native OS or a universal repository installer. No new native permissions, tokens, automatic network requests or unattended installs are added. Manual Netlify deploy only after browser CI and owner review.
+
 ## Test and rollout
 
 The static site packaging includes `os/` in the Netlify-ready ZIP, with `/os/index.html` as the entry point, and supports GitHub Pages under `/phi-field/os/`. The staged release root gateway's **PhiOS Live** button now points to its own `./os/` folder. Nothing changes at the live Netlify site until the owner manually uploads the approved ZIP. The R1 app is also independently launchable.

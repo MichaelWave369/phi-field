@@ -96,6 +96,25 @@ def check_desktop(browser,base):
         "buffer":json.dumps(shelf_backup).encode("utf-8")})
     expect(page.locator('#shelf-list .shelf-entry')).to_have_count(1)
     expect(page.locator('#shelf-status')).to_contain_text("source bookmarks")
+    # R4: only the reviewed first-party PWA gets browser-managed install controls.
+    page.locator('#appMenu').click()
+    page.locator('#menu [data-open="appcenter"]').click()
+    center=page.locator('.window[data-app="appcenter"]')
+    expect(center).to_be_visible()
+    expect(center.locator('.reviewed-app')).to_contain_text('CI-REVIEWED WEB PWA')
+    expect(center.locator('.reviewed-app')).to_contain_text('NOT INDEPENDENTLY VERIFIED')
+    expect(center.locator('[data-action="pwa-install"]')).to_have_text('INSTALL IN BROWSER MENU')
+    assert center.locator('a[href="./"]').count()==1
+    page.evaluate("""() => {
+      window.__phiInstallCalls=0;
+      const event=new Event('beforeinstallprompt',{cancelable:true});
+      event.prompt=()=>{window.__phiInstallCalls++;return Promise.resolve({outcome:'dismissed'});};
+      window.dispatchEvent(event);
+    }""")
+    expect(center.locator('[data-action="pwa-install"]')).to_have_text('INSTALL WITH BROWSER')
+    assert page.evaluate("window.__phiInstallCalls")==0,'Install prompt executed without user gesture'
+    center.locator('[data-action="pwa-install"]').click()
+    page.wait_for_function("window.__phiInstallCalls === 1")
     page.screenshot(path=str(SHOTS/'phios-web-desktop.png'),full_page=True)
     assert not errors,errors
     context.close()
@@ -107,7 +126,7 @@ def check_phone(browser,base):
     page.on('pageerror',lambda e:errors.append(str(e)))
     response=page.goto(base+'/os/',wait_until='networkidle')
     assert response.status==200
-    assert page.locator('.launchers [data-open]').count()==7
+    assert page.locator('.launchers [data-open]').count()==8
     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1'), 'Horizontal overflow'
     page.locator('#appMenu').click()
     page.locator('#menu [data-open="notes"]').click()

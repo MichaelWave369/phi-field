@@ -37,7 +37,7 @@ class WebOSContracts(unittest.TestCase):
             self.assertIn(name, self.html_tree.ids)
         for app in ('files', 'notes', 'terminal', 'ledger', 'settings', 'catalog', 'about'):
             self.assertIn('data-open="'+app+'"', self.html)
-        self.assertEqual(self.html_tree.scripts, [{'src': './catalog-data.js', 'defer': None}, {'src': './shelf-portable.js', 'defer': None}, {'src': './webos.js', 'defer': None}])
+        self.assertEqual(self.html_tree.scripts, [{'src': './catalog-data.js', 'defer': None}, {'src': './shelf-portable.js', 'defer': None}, {'src': './app-center-data.js', 'defer': None}, {'src': './webos.js', 'defer': None}])
         self.assertIn('prefers-reduced-motion:reduce', self.css)
         self.assertIn('type="file"', self.html)
 
@@ -99,10 +99,32 @@ class WebOSContracts(unittest.TestCase):
         self.assertIn("data-shelf-action", self.js)
         self.assertIn("shelf-portable.js", self.sw)
 
+    def test_reviewed_pwa_only_and_browser_controls_install(self):
+        data=json.loads((OS/'app-center-reviews.v1.json').read_text(encoding='utf-8'))
+        source=json.loads((OS/'public-repo-catalog.v1.json').read_text(encoding='utf-8'))
+        self.assertEqual(data['catalog_source_sha'], source['provenance']['source_blob_sha'])
+        self.assertEqual(len(data['reviewed_web_apps']), 1)
+        app=data['reviewed_web_apps'][0]
+        self.assertEqual(app['app_id'], 'github:1442243366')
+        self.assertEqual(app['review_status'], 'ci_reviewed_browser_app')
+        self.assertFalse(app['evidence']['live_endpoint_independently_verified'])
+        self.assertFalse(app['actions']['native_install'])
+        self.assertFalse(data['policy']['autonomous_installs'])
+        self.assertIn('data-open="appcenter"',self.html)
+        self.assertIn("event.preventDefault()",self.js)
+        self.assertIn("'beforeinstallprompt'",self.js)
+        self.assertIn("'appinstalled'",self.js)
+        self.assertIn("pending.prompt()",self.js)
+        self.assertIn("if(key==='pwa-install'){installBrowserApp();return;}",self.js)
+        self.assertIn('app-center-data.js',self.sw)
+        wrapped=(OS/'app-center-data.js').read_text(encoding='utf-8')
+        self.assertEqual(json.loads(wrapped.split(' = ',1)[1].strip().rstrip(';')),data)
+
     def test_bundle_copies_webos_but_does_not_repoint_live_gateway(self):
         pack = (ROOT / 'scripts/package_site.py').read_text(encoding='utf-8')
         for name in ('os/index.html', 'os/styles.css', 'os/webos.js', 'os/sw.js',
-                     'os/catalog-data.js', 'os/shelf-portable.js', 'os/public-repo-catalog.v1.json'):
+                     'os/catalog-data.js', 'os/shelf-portable.js', 'os/public-repo-catalog.v1.json',
+                     'os/app-center-data.js', 'os/app-center-reviews.v1.json'):
             self.assertIn(name, pack)
         gateway = (ROOT / 'index.html').read_text(encoding='utf-8')
         self.assertIn('href="./os/" data-destination="live"', gateway)

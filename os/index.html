@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="./styles.css">
 <script src="./catalog-data.js" defer></script>
 <script src="./shelf-portable.js" defer></script>
+<script src="./app-center-data.js" defer></script>
 <script src="./webos.js" defer></script>
 </head><body>
 <a class="skip" href="#desktop">Skip to desktop</a>
@@ -26,6 +27,7 @@
 <button type="button" data-open="ledger"><span aria-hidden="true">◇</span><strong>Ledger</strong></button>
 <button type="button" data-open="settings"><span aria-hidden="true">⚙</span><strong>Settings</strong></button>
 <button type="button" data-open="catalog"><span aria-hidden="true">✦</span><strong>App Catalog</strong></button>
+<button type="button" data-open="appcenter"><span aria-hidden="true">⬡</span><strong>App Center</strong></button>
 <button type="button" data-open="about"><span aria-hidden="true">Φ</span><strong>About</strong></button>
 </nav>
 <section class="app-shelf" id="app-shelf" aria-labelledby="shelf-title">
@@ -48,6 +50,7 @@
 <button type="button" role="menuitem" data-open="ledger">◇ Local Activity Ledger</button>
 <button type="button" role="menuitem" data-open="settings">⚙ Settings & Backup</button>
 <button type="button" role="menuitem" data-open="catalog">✦ Public App Catalog</button>
+<button type="button" role="menuitem" data-open="appcenter">⬡ Reviewed Web Apps</button>
 <button type="button" role="menuitem" data-open="about">Φ System Information</button>
 </div>
 <input type="file" id="importFile" accept=".json,application/json" hidden aria-label="Choose local PhiOS Web backup JSON">
