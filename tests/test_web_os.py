@@ -121,8 +121,8 @@ class WebOSContracts(unittest.TestCase):
         self.assertEqual(json.loads(wrapped.split(' = ',1)[1].strip().rstrip(';')),data)
 
     def test_r5_browser_lifecycle_never_claims_native_uninstall(self):
-        self.assertIn("data.action='pwa-update'", self.js)
-        self.assertIn("data.action='pwa-manage'", self.js)
+        self.assertIn("check.dataset.action='pwa-update'", self.js)
+        self.assertIn("help.dataset.action='pwa-manage'", self.js)
         self.assertIn("navigator.serviceWorker.getRegistration('./')", self.js)
         self.assertIn("await registration.update()", self.js)
         self.assertIn("display-mode: standalone", self.js)
