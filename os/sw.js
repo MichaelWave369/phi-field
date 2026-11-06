@@ -1,5 +1,5 @@
 /* Offline shell only. Scoped to /os/, never intercepts the Phi Field gateway. */
-const CACHE='phios-web-alpha-app-center-r4-v4';
+const CACHE='phios-web-alpha-lifecycle-r5-v5';
 const ASSETS=['./','./index.html','./styles.css','./webos.js','./catalog-data.js','./shelf-portable.js','./app-center-data.js','./app-center-reviews.v1.json','./public-repo-catalog.v1.json','./icon.svg','./manifest.webmanifest'];
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting()));
