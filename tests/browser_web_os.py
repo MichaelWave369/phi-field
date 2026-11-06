@@ -115,6 +115,13 @@ def check_desktop(browser,base):
     assert page.evaluate("window.__phiInstallCalls")==0,'Install prompt executed without user gesture'
     center.locator('[data-action="pwa-install"]').click()
     page.wait_for_function("window.__phiInstallCalls === 1")
+    # R5: observe PWA context, request a real same-origin service-worker check,
+    # and never claim native uninstall or rollback is possible in JavaScript.
+    expect(center.locator('#pwa-observed-state')).to_contain_text('normal browser tab')
+    center.locator('[data-action="pwa-update"]').click()
+    expect(center.locator('#pwa-lifecycle-result')).to_contain_text('not controlled')
+    center.locator('[data-action="pwa-manage"]').click()
+    expect(center.locator('#pwa-lifecycle-result')).to_contain_text('cannot uninstall itself')
     page.screenshot(path=str(SHOTS/'phios-web-desktop.png'),full_page=True)
     assert not errors,errors
     context.close()

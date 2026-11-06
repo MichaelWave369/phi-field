@@ -37,6 +37,12 @@ A real PWA installation prompt may be offered in Chromium; the App Center calls 
 
 The R4 frontend is **not** a native OS or a universal repository installer. No new native permissions, tokens, automatic network requests or unattended installs are added. Manual Netlify deploy only after browser CI and owner review.
 
+## R5A: browser-owned installation lifecycle
+
+The reviewed App Center now reports whether the **current browsing context** is a normal tab or standalone display mode. Neither proves installation provenance or version; an `appinstalled` event only reports the browser's observation during this session. The existing browser-mediated install action still requires a real `beforeinstallprompt` and user click.
+
+**CHECK WEB UPDATE** calls `navigator.serviceWorker.getRegistration('./')` and, when found, `registration.update()` for this origin and `/os/` scope. A completed check does **not** mean a new build was installed. **HOW TO MANAGE / REMOVE** provides browser/device instructions; JavaScript cannot uninstall or roll back a PWA. The original site gateway, local files and App Shelf are retained. R5A needs a manual Netlify ZIP deployment after review and green Chromium CI. No native permissions or automatic package installs.
+
 ## Test and rollout
 
 The static site packaging includes `os/` in the Netlify-ready ZIP, with `/os/index.html` as the entry point, and supports GitHub Pages under `/phi-field/os/`. The staged release root gateway's **PhiOS Live** button now points to its own `./os/` folder. Nothing changes at the live Netlify site until the owner manually uploads the approved ZIP. The R1 app is also independently launchable.

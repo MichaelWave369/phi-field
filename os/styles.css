@@ -47,3 +47,12 @@ body[data-no-effects="true"] .stars,body[data-no-effects="true"] .portal{display
 .reviewed-app .toolbar{margin:14px 0;display:flex;flex-wrap:wrap}
 .reviewed-app .toolbar a{text-decoration:none;display:flex;align-items:center;justify-content:center}
 @media(max-width:540px){.reviewed-app .toolbar .btn{width:100%}}
+
+
+/* R5: browser-reported PWA context is not native package attestation. */
+.pwa-lifecycle{margin-top:20px;padding:14px;border-top:1px solid #426e8a;border-radius:8px;background:#091a30a9}
+.pwa-lifecycle h4{margin:0 0 8px;color:var(--cyan);font-size:13px;letter-spacing:.08em}
+.pwa-lifecycle p{font-size:11px;line-height:1.6;color:var(--muted)}
+.pwa-lifecycle #pwa-observed-state{color:#edca91;font-weight:bold}
+.pwa-lifecycle .toolbar{display:flex;flex-wrap:wrap;gap:8px}
+.pwa-lifecycle .toolbar button{flex:1 1 160px;min-height:42px}

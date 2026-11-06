@@ -347,7 +347,45 @@
     message.textContent=browserInstalledReported?'The browser reported successful PWA installation.':
       browserInstallPrompt?'The browser offers an installation prompt. Installation still requires your approval.':
       'Use the browser menu or address-bar Install option when available. Some browsers do not provide a custom installation prompt.';
-    row.append(open,install,source);card.append(heading,badge,desc,note,row,message);
+    const lifecycle=document.createElement('section');lifecycle.className='pwa-lifecycle';
+    const title=document.createElement('h4');title.textContent='INSTALLATION & LIFECYCLE';
+    const stateLabel=document.createElement('p');stateLabel.id='pwa-observed-state';stateLabel.setAttribute('role','status');
+    const standalone=window.matchMedia?.('(display-mode: standalone)')?.matches===true||
+      window.navigator.standalone===true;
+    stateLabel.textContent=browserInstalledReported
+      ?'BROWSER EVENT: appinstalled was reported in this session. Verify in browser settings.'
+      :standalone
+        ?'RUNNING IN STANDALONE DISPLAY MODE. This does not prove a particular package version.'
+        :'CURRENT SESSION: normal browser tab. Installed status cannot be inspected by this webpage.';
+    const manage=document.createElement('p');manage.className='help';
+    manage.textContent='Updates are checked through this origin’s service worker. For uninstall, storage removal, or app version management, use your browser or device app settings. This page has no uninstall or rollback permission.';
+    const controls=document.createElement('div');controls.className='toolbar';
+    const check=document.createElement('button');check.type='button';check.className='btn';check.dataset.action='pwa-update';check.textContent='CHECK WEB UPDATE';
+    const help=document.createElement('button');help.type='button';help.className='btn';help.dataset.action='pwa-manage';help.textContent='HOW TO MANAGE / REMOVE';
+    const outcome=document.createElement('p');outcome.id='pwa-lifecycle-result';outcome.className='status-message';outcome.setAttribute('role','status');
+    outcome.textContent='No update check requested. Rollback is browser/platform-managed and not guaranteed.';
+    controls.append(check,help);lifecycle.append(title,stateLabel,manage,controls,outcome);
+    row.append(open,install,source);card.append(heading,badge,desc,note,row,message,lifecycle);
+  }
+  async function checkWebUpdates(){
+    const result=$('#pwa-lifecycle-result');
+    if(!result)return;
+    if(!('serviceWorker' in navigator)){
+      result.textContent='This browser has no service-worker update interface; no update was performed.';
+      return;
+    }
+    result.textContent='Checking this site’s service worker for an update…';
+    try{
+      const registration=await navigator.serviceWorker.getRegistration('./');
+      if(!registration){
+        result.textContent='PhiOS Web is not controlled by a registered service worker. No update check performed.';
+        return;
+      }
+      await registration.update();
+      result.textContent='Service-worker update check completed. This does not prove a newer version was installed. Refresh when your browser applies an update.';
+    }catch{
+      result.textContent='Service-worker update check failed or unavailable (perhaps offline). No update claim made.';
+    }
   }
   function installBrowserApp(){
     const profile=reviewedWebProfile();
@@ -460,6 +498,12 @@
       const action=ev.target.closest('[data-action]');if(!action)return;
       const key=action.dataset.action;
       if(key==='pwa-install'){installBrowserApp();return;}
+      if(key==='pwa-update'){void checkWebUpdates();return;}
+      if(key==='pwa-manage'){
+        const note=$('#pwa-lifecycle-result');
+        if(note)note.textContent='Open your browser’s Apps/Installed apps menu or your device app settings to manage, uninstall or clear this PWA. PhiOS Web cannot uninstall itself or roll back browser-managed updates.';
+        return;
+      }
       if(key==='new-file'){
         const value=window.prompt('New text file name (up to 80 characters)','Untitled.txt');
         if(value!==null){const d=createDoc(value);if(d)openWindow('notes'),refresh('notes');}
