@@ -38,3 +38,12 @@ body[data-no-effects="true"] .stars,body[data-no-effects="true"] .portal{display
 .catalog-entry .catalog-actions button{min-width:64px}
 @media(max-width:800px){.app-shelf{width:calc(100% - 24px);margin:18px 12px 85px}.shelf-entry{align-items:flex-start}.shelf-controls{justify-content:flex-end}}
 @media(max-width:540px){.catalog-entry .catalog-actions{width:100%;flex-direction:column}.catalog-entry .catalog-actions .btn{display:block;width:100%;text-align:center}.shelf-heading h2{font-size:17px}}
+
+/* R4: reviewed PWA App Center, not an unreviewed code installer. */
+.reviewed-app{border:1px solid #3b94b8;border-radius:12px;background:linear-gradient(145deg,#17334e,#111c37);padding:17px;margin:15px 0}
+.reviewed-app h3{color:var(--cyan);font-size:19px;margin:0 0 5px}
+.reviewed-app>small{display:block;font-size:10px;letter-spacing:.08em;color:var(--gold);line-height:1.5}
+.reviewed-app p{line-height:1.6;color:var(--muted);font-size:12px}
+.reviewed-app .toolbar{margin:14px 0;display:flex;flex-wrap:wrap}
+.reviewed-app .toolbar a{text-decoration:none;display:flex;align-items:center;justify-content:center}
+@media(max-width:540px){.reviewed-app .toolbar .btn{width:100%}}
