@@ -114,7 +114,7 @@ def check_desktop(browser,base):
     expect(center.locator('[data-action="pwa-install"]')).to_have_text('INSTALL WITH BROWSER')
     assert page.evaluate("window.__phiInstallCalls")==0,'Install prompt executed without user gesture'
     center.locator('[data-action="pwa-install"]').click()
-    expect.poll(lambda:page.evaluate("window.__phiInstallCalls")).to_be(1)
+    page.wait_for_function("window.__phiInstallCalls === 1")
     page.screenshot(path=str(SHOTS/'phios-web-desktop.png'),full_page=True)
     assert not errors,errors
     context.close()
