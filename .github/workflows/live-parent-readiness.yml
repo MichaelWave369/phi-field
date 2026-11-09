@@ -1,0 +1,44 @@
+name: Φ Field R17 live PhiOS parent readiness (read-only)
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/audit_live_phios_parent.mjs'
+      - 'tests/live_phios_parent_audit.test.mjs'
+      - '.github/workflows/live-parent-readiness.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/audit_live_phios_parent.mjs'
+      - 'tests/live_phios_parent_audit.test.mjs'
+      - '.github/workflows/live-parent-readiness.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live-parent-preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Checkout exact public field source, without Git credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Parse offline audit and test definitions
+        run: |
+          node --check scripts/audit_live_phios_parent.mjs
+          node --check tests/live_phios_parent_audit.test.mjs
+
+      - name: Offline R17 runtime/CSP/refusal contract tests
+        run: node --test tests/live_phios_parent_audit.test.mjs
+
+      - name: Read-only live Netlify parent + live PixelForge availability audit
+        run: node scripts/audit_live_phios_parent.mjs
