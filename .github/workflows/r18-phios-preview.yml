@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - '.github/workflows/r18-phios-preview.yml'
+      - '.github/workflows/browser-smoke.yml'
       - 'scripts/stage_r18_phios_preview.mjs'
       - 'tests/r18_phios_preview.test.mjs'
       - 'docs/R18_PHIOS_PIXELFORGE_ISOLATED_PREVIEW.md'
