@@ -1,0 +1,88 @@
+name: Φ Field R18 isolated PhiShell PixelForge preview (review-only)
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/r18-phios-preview.yml'
+      - 'scripts/stage_r18_phios_preview.mjs'
+      - 'tests/r18_phios_preview.test.mjs'
+      - 'docs/R18_PHIOS_PIXELFORGE_ISOLATED_PREVIEW.md'
+
+permissions:
+  contents: read
+
+jobs:
+  build-isolated-pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout phi-field candidate without credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Checkout exactly reviewed PhiOS merge
+        uses: actions/checkout@v4
+        with:
+          repository: MichaelWave369/PhiOS
+          ref: ec8dfd3cd4373aa49d5a498d1d8a578ecde4c630
+          path: .interop/phios
+          persist-credentials: false
+
+      - name: Checkout exactly reviewed PixelForge bridge merge
+        uses: actions/checkout@v4
+        with:
+          repository: MichaelWave369/parallax-pixelforge
+          ref: b1c6314da005de801ba3b0417ffe4b4abe461828
+          path: .interop/phios/.interop/pixelforge
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Confirm source pins, static policy and review-only workflow
+        run: |
+          test "$(git -C .interop/phios rev-parse HEAD)" = "ec8dfd3cd4373aa49d5a498d1d8a578ecde4c630"
+          test "$(git -C .interop/phios/.interop/pixelforge rev-parse HEAD)" = "b1c6314da005de801ba3b0417ffe4b4abe461828"
+          node --check scripts/stage_r18_phios_preview.mjs
+          node --test tests/r18_phios_preview.test.mjs
+
+      - name: Qualify pinned PhiShell sources before packaging
+        working-directory: .interop/phios/phishell
+        run: |
+          npm ci --no-audit --no-fund
+          npm test
+
+      - name: Build exact reviewed browser pilot configuration (no network grants)
+        working-directory: .interop/phios/phishell
+        env:
+          VITE_PHIOS_PIXELFORGE_BRIDGE_URL: https://michaelwave369.github.io/parallax-pixelforge/vr-studio/
+          VITE_PHIOS_PIXELFORGE_BRIDGE_APPROVED_ORIGIN: https://michaelwave369.github.io
+        run: npm run build
+
+      - name: Assemble isolated-origin artifact with policy and byte receipt
+        run: |
+          node scripts/stage_r18_phios_preview.mjs
+          test -f .artifacts/phios-r18-preview/r18-provenance.json
+          test -f .artifacts/phios-r18-preview/_headers
+          (cd .artifacts/phios-r18-preview && zip -q -r ../phios-r18-preview-only.zip .)
+          sha256sum .artifacts/phios-r18-preview-only.zip
+
+      - name: Qualify Chrome iframe, live reviewed PixelForge scripts and consent
+        working-directory: .interop/phios
+        env:
+          PHIOS_R16_LIVE_PAGES: '1'
+        run: |
+          command -v google-chrome || command -v chromium || command -v chromium-browser
+          npm --prefix .interop/pixelforge/site install --no-audit --no-fund
+          npm --prefix .interop/pixelforge/site run build
+          node phishell/host/pixelForgeR12TwoOriginBrowser.mjs
+
+      - name: Upload isolated preview ZIP for review (NEVER a deployment)
+        uses: actions/upload-artifact@v4
+        with:
+          name: phios-r18-isolated-preview-NOT-DEPLOYED
+          path: .artifacts/phios-r18-preview-only.zip
+          if-no-files-found: error
+          retention-days: 14
